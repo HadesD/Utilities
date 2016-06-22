@@ -12,7 +12,7 @@ window.yconnectInit = function() {
             className: "yconnectLogin"
         },
         authorization: {
-            clientId: "dj0zaiZpPUJmWGNqRzY4T3JONiZzPWNvbnN1bWVyc2VjcmV0Jng9YmM-",
+            clientId: "dj0zaiZpPVBLTXg2NVZDWFpIcyZzPWNvbnN1bWVyc2VjcmV0Jng9NjA-",
             redirectUri: "http://localhost/yahoo/index.php",
             scope: "openid",
             state: "hades",
@@ -55,8 +55,8 @@ function cURL($url = null, $headers = null, $postFields = null) {
 }
 // get Access Token
 $url = 'https://auth.login.yahoo.co.jp/yconnect/v1/token';
-$applicationId = "dj0zaiZpPUJmWGNqRzY4T3JONiZzPWNvbnN1bWVyc2VjcmV0Jng9YmM-";
-$secret = "85ec2f54d220ee311eb0325e7a30f49bf1e5ce18";
+$applicationId = "dj0zaiZpPVBLTXg2NVZDWFpIcyZzPWNvbnN1bWVyc2VjcmV0Jng9NjA-";
+$secret = "202220f67c5875689e1b29047a35f2cb7340817b";
 $basicAuth = base64_encode($applicationId . ':' . $secret);
 $postFields = "grant_type=authorization_code&code=" . $_GET['code'] . "&redirect_uri=http%3A%2F%2Flocalhost%2Fyahoo%2Findex.php";
 $headers = array(
@@ -74,15 +74,20 @@ $access_token = $result_arr['access_token'];
 ?>
 <pre>
 <?php
-$URLmySellingList = 'https://auctions.yahooapis.jp/AuctionWebService/V2/mySellingList?start=1&';
+$URLmySellingList = 'https://auctions.yahooapis.jp/AuctionWebService/V2/mySellingList?';
 $params = array(
-  'output'  =>  'json',
-  'start'   =>  1,
+  'output'  =>  'php',
+  'start'   =>  2,
 );
 $headers = array(
   "Authorization: Bearer " . $access_token,
 );
 $list = cURL($URLmySellingList . http_build_query($params), $headers);
+if(empty($list))
+  exit;
+$list = unserialize($list);
+if(empty($list['ResultSet']))
+  exit;
 print_r($list);
 ?>
 </pre>
