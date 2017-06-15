@@ -1,12 +1,29 @@
 namespace API
 {
-  public class Hello
+  public class Uranai
   {
-    public static void Main()
+    protected string _token;
+    protected string _api_url;
+  
+    public Uranai()
     {
-      // Here your code !
-            
-      System.Console.WriteLine("Hello C#");
+      this._api_url = "https://api.example.com/v1/uranai/";
+      
+      // this.Auth();
+    }
+    private bool Auth()
+    {
+      // Auth Statements
+      this._token = "";// Result token.
+      return true;
+    }
+    public /* string|array_type */ UranaiByBirthday(int birthday)
+    {
+      // return result
+    }
+    public string getToken()
+    {
+      return this._token;
     }
   }
 }
