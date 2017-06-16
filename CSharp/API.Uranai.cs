@@ -1,3 +1,5 @@
+using System.Net;
+using System.IO;
 namespace API
 {
   public class Uranai
@@ -7,7 +9,7 @@ namespace API
   
     public Uranai()
     {
-      this._api_url = "https://api.example.com/v1/uranai/";
+      this._api_url = "http://api.jugemkey.jp/api/horoscope/free/";
       
       // this.Auth();
     }
@@ -17,13 +19,27 @@ namespace API
       this._token = "";// Result token.
       return true;
     }
-    public /* string|array_type */ UranaiByBirthday(int birthday)
+    public void UranaiByBirthday(int birthday)
     {
+      HttpWebRequest request = (HttpWebRequest) WebRequest.Create(this._api_url + birthday);
+      HttpWebResponse response = (HttpWebResponse) request.GetResponse();
+      if ((response.StatusCode == HttpStatusCode.OK) && (response.ContentLength > 0))
+      {
+        TextReader reader = new StreamReader(response.GetResponseStream());
+        string text = reader.ReadToEnd();
+        System.Console.Write(text);
+      }
       // return result
     }
     public string getToken()
     {
       return this._token;
+    }
+    static void Main(string[] args)
+    {
+      Uranai u = new Uranai();
+      
+      u.UranaiByBirthday(1);
     }
   }
 }
