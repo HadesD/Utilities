@@ -1,5 +1,6 @@
 using System.Net;
 using System.IO;
+
 namespace API
 {
   public class Uranai
@@ -19,15 +20,22 @@ namespace API
       this._token = "";// Result token.
       return true;
     }
-    public void UranaiByBirthday(int birthday)
+    public void UranaiByBirthday(string birthday)
     {
-      HttpWebRequest request = (HttpWebRequest) WebRequest.Create(this._api_url + birthday);
-      HttpWebResponse response = (HttpWebResponse) request.GetResponse();
-      if ((response.StatusCode == HttpStatusCode.OK) && (response.ContentLength > 0))
+      try
       {
-        TextReader reader = new StreamReader(response.GetResponseStream());
-        string text = reader.ReadToEnd();
-        System.Console.Write(text);
+        HttpWebRequest request = (HttpWebRequest) WebRequest.Create(this._api_url + birthday);
+        HttpWebResponse response = (HttpWebResponse) request.GetResponse();
+        if ((response.StatusCode == HttpStatusCode.OK) && (response.ContentLength > 0))
+        {
+          TextReader reader = new StreamReader(response.GetResponseStream());
+          string text = reader.ReadToEnd();
+          System.Console.Write(text);
+        }
+      }
+      catch (WebException)
+      {
+        return;
       }
       // return result
     }
@@ -39,7 +47,7 @@ namespace API
     {
       Uranai u = new Uranai();
       
-      u.UranaiByBirthday(1);
+      u.UranaiByBirthday("2017/06/01");
     }
   }
 }
