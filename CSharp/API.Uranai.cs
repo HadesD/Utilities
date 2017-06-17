@@ -24,14 +24,9 @@ namespace API
     {
       try
       {
-        HttpWebRequest request = (HttpWebRequest) WebRequest.Create(this._api_url + birthday);
-        HttpWebResponse response = (HttpWebResponse) request.GetResponse();
-        if ((response.StatusCode == HttpStatusCode.OK) && (response.ContentLength > 0))
-        {
-          TextReader reader = new StreamReader(response.GetResponseStream());
-          string text = reader.ReadToEnd();
-          System.Console.Write(text);
-        }
+        WebClient client = new WebClient();
+        string content = client.DownloadString(this._api_url + birthday);
+        System.Console.Write(content);
       }
       catch (WebException)
       {
