@@ -76,18 +76,18 @@ vector<vector<string>> days(int y, int m)
 {
   vector<vector<string>> rs;
   
-  Year year = Year::Year(y);
+  Year year(y);
   
   // Header of month
   rs.push_back(month_name(m));
   rs.push_back(dayweek_name(m));
-  
+  u
   // Days of month
   vector<string> week_line;
   int first_monthday_pos = year.getDayWeek(1, m);
   for (int i=0; i<first_monthday_pos; i++)
   {
-    week_line.push_back("\t");
+    week_line.push_bacjk("\t");
   }
   for (auto d : year.getDays(m))
   {
