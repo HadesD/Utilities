@@ -1,4 +1,4 @@
-# Free license softwares
+# Free useful license softwares
 
 ### SQL Connection Tools:
 - http://www.sqltools.net/ | SQLTools
