@@ -4,6 +4,7 @@
  */
 
 #include <vector>
+#include <time.h>
 
 struct Year
 {
@@ -14,12 +15,18 @@ struct Year
     year = y;
   }
   
-  vector<int> getDays(int month)
+  // If year is Leap (29 days in Feb)
+  bool isLeapYear()
   {
+    return (year % 4 == 0) && (year % 100 == 0) && (year % 400 == 0);
+  }
+  
+  // Get list days in the month
+  std::vector<int> getDaysOfMonth(int month)
+  {
+    std::vector<int> day_list;
 
-    vector<int> day_list;
-
-    for (int i=1; i<= getLastDayOfMonth(month); i++)
+    for (int i=1; i<=getLastDayOfMonth(month); i++)
     {
       day_list.push_back(i);
     }
@@ -29,15 +36,22 @@ struct Year
   
   int getLastDayOfMonth(int month)
   {
-    int days_in_month[2][12] = [
+    int days_in_month[2][12] = {
       {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
       {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
-    ];
+    };
+    
+    int type = 0;
+    
+    if (isLeapYear())
+    {
+      type = 1;
+    }
 
-    return days_in_month[month-1];
+    return days_in_month[type][month-1];
   }
   
-  int getWeekday(int day, int month)
+  int getWeekday(int month, int day)
   {
     tm time_struct;
     time_struct = {};
