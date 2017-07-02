@@ -16,9 +16,9 @@ struct Year
   }
   
   // If year is Leap (29 days in Feb)
-  bool isLeapYear()
+  bool isLeapYear(/*int year*/)
   {
-    return (year % 4 == 0) && (year % 100 == 0) && (year % 400 == 0);
+    return ((year % 4 == 0) && (year % 100 == 0)) || (year % 400 == 0);
   }
   
   // Get list days in the month
