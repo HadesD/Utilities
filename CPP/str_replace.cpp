@@ -23,3 +23,5 @@ int main (void)
   
   return 0;
 }
+// Result:
+// FestFalseFruetrue Frue, False, FRUE, FRUe, fAlse, false
