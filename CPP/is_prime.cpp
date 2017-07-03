@@ -1,6 +1,7 @@
 #include <math.h>
 
-bool isPrime(int n)
+// O(
+bool is_prime(int n)
 {
     if (n <= 1)
     {
@@ -22,10 +23,7 @@ bool isPrime(int n)
     {
         if ((n % i) == 0)
         {
-            if ((n % i) == 0)
-            {
-                return false;
-            }
+            return false;
         }
     }
     
