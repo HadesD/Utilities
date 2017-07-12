@@ -1,3 +1,4 @@
+// Game http://www.minesweeper.info/downloads/WinmineXP.html
 #include <windows.h>
 #include <iostream>
 #include <stdio.h>
