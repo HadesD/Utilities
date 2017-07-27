@@ -1,31 +1,48 @@
 #include <string>
 
-std::string str_replace(std::string search, std::string replace, std::string subject)
+std::string str_replace(std::string search, std::string replace, std::string &subject)
 {
-  std::string str = subject;
   size_t pos = 0;
   while ((pos = str.find(search, pos)) != std::string::npos)
   {
     str.replace(pos, search.length(), replace);
     pos += replace.length();
   }
-  return str;
+  return subject;
 }
 
 #include <vector>
-std::string str_replace(std::vector<std::string> searches, std::string replace, std::string subject)
+std::string str_replace(std::vector<std::string> searches, std::string replace, std::string &subject)
 {
-  std::string str = subject;
   for (std::string search : searches)
   {
     size_t pos = 0;
     while ((pos = str.find(search, pos)) != std::string::npos)
     {
-      str.replace(pos, search.length(), replace);
+      subject.replace(pos, search.length(), replace);
       pos += replace.length();
     }
   }
-  return str;
+  return subject;
+}
+
+std::string str_replace(std::vector<std::string> searches, std::vector<std::string> replaces, std::string &subject)
+{
+  for (int i = 0; i < searches.size(); i++)
+  {
+    std::string replace;
+    if (replaces.size() > i)
+    {
+      replace = replaces.at(i);
+    }
+    size_t pos = 0;
+    while ((pos = subject.find(searches.at(i), pos)) != std::string::npos)
+    {
+      subject.replace(pos, searches.at(i).length(), replace);
+      pos += replace.length();
+    }
+  }
+  return subject;
 }
 
 // Test
