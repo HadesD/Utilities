@@ -1,6 +1,9 @@
 /**
  * Compile:
  * g++ -std=c++1z jpcal.cpp -o jpcal && sudo cp jpcal /usr/local/bin/
+ * 
+ * Copyright: Dark.Hades (c) 2017
+ * License: MIT
  */
 
 #include <iostream>
