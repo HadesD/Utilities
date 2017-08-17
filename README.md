@@ -8,7 +8,8 @@
 
 ### Terminal / Shell
 - http://mobaxterm.mobatek.net/download-home-edition.html | MobaXterm
-- http://fideloper.com/mac-vim-tmux | Tmux - Terminal act like VIM
+- https://github.com/tmux/tmux | Tmux - Terminal act like VIM
+- https://conemu.github.io/ | ConEmu - Terminal for windows-only
 
 ### Util Tools:
-- https://vmi.jp/software/cygwin/cocot.html | Cocot - Page code convert (Useful for EUC-JP or Old page code)
+- https://github.com/vmi/cocot | Cocot - Page code convert (Useful for EUC-JP or Old page code)
