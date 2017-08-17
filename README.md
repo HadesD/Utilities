@@ -10,5 +10,5 @@
 - http://mobaxterm.mobatek.net/download-home-edition.html | MobaXterm
 - http://fideloper.com/mac-vim-tmux | Tmux - Terminal act like VIM
 
-### Until Tools:
+### Util Tools:
 - https://vmi.jp/software/cygwin/cocot.html | Cocot - Page code convert (Useful for EUC-JP or Old page code)
