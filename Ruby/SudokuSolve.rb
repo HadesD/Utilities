@@ -1,3 +1,5 @@
+game_grid = "003020600900305001001806400008102900700000008006708200002609500800203009005010300"
+
 class Game
   def initialize
     @game_board = []
@@ -7,6 +9,16 @@ class Game
         col.push(0)
       end
       @game_board.push(col)
+    end
+  end
+  
+  def setGameBoardByGrid(grid)
+    raise grid unless 81
+    
+    @game_board.each_with_index do | gbX, x |
+      gbX.each_with_index do | gbY, y |
+        @game_board[x][y] = grid[x * 9 + y]
+      end
     end
   end
   
@@ -44,5 +56,7 @@ class Game
 end
 
 game = Game.new
+
+game.setGameBoardByGrid(game_grid)
 
 game.drawGameBoard()
