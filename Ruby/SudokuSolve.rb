@@ -9,29 +9,28 @@ game_grid = [
 
 class Game
   def initialize
-    @game_grid
     @game_board = []
-    for x in (0..8) do
+    9.times do
       col = []
-      for y in (0..8) do
+      9.times do
         col.push(0)
       end
       @game_board.push(col)
     end
   end
- 
+
   def drawGameBoard()
     break_line = -> (x) { 
       if ((x != 0) && ((x % 3) == 0)) then
-      for i in (0..30) do
-        if (i % 10 == 0) then
-          print "+"
-        else
-          print '-'
+        for i in (0..30) do
+          if (i % 10 == 0) then
+            print "+"
+          else
+            print '-'
+          end
         end
+        puts
       end
-      puts
-    end
     }
     @game_board.each_with_index do | gbX, x |
       break_line.call(x)
@@ -47,11 +46,11 @@ class Game
       puts
     end
   end
-  
+
   def getGameBoard()
     return @game_board
   end
-    
+
   def solve()
     num_index = @game_grid.index('0')
     return true unless num_index
@@ -75,8 +74,8 @@ class Game
     @game_grid = grid
     @game_board.each_with_index do | gbX, x |
       gbX.each_with_index do | gbY, y |
-        @game_board[x][y] = @game_grid[x * 9 + y]
-      end
+      @game_board[x][y] = @game_grid[x * 9 + y]
+    end
     end
   end
 
@@ -134,4 +133,3 @@ if (solved)
 else
   p "Can not solve this game"
 end
- 
