@@ -1,7 +1,11 @@
 #include <string>
 #include <regex>
 
-bool preg_match(std::string pattern, std::string subject, std::smatch &matches)
+bool preg_match(
+  const std::string &pattern, 
+  const std::string &subject, 
+  std::smatch &matches
+  )
 {
   std::regex reg(pattern);
   
