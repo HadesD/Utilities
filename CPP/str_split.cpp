@@ -2,7 +2,7 @@
 #include <string>
 #include <sstream>
 
-std::vector<std::string> str_split(std::string str, char delimiter)
+std::vector<std::string> str_split(const std::string &str, const char &delimiter)
 {
   std::vector<std::string> internal;
   std::stringstream ss(str); // Turn the string into a stream.
