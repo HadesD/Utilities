@@ -1,6 +1,6 @@
 #include <string>
 
-std::string str_replace(std::string search, std::string replace, std::string &subject)
+std::string str_replace(const std::string &search, const std::string &replace, std::string &subject)
 {
   size_t pos = 0;
   while ((pos = str.find(search, pos)) != std::string::npos)
@@ -12,7 +12,7 @@ std::string str_replace(std::string search, std::string replace, std::string &su
 }
 
 #include <vector>
-std::string str_replace(std::vector<std::string> searches, std::string replace, std::string &subject)
+std::string str_replace(const std::vector<std::string> &searches, const std::string &replace, std::string &subject)
 {
   for (std::string search : searches)
   {
@@ -26,7 +26,7 @@ std::string str_replace(std::vector<std::string> searches, std::string replace, 
   return subject;
 }
 
-std::string str_replace(std::vector<std::string> searches, std::vector<std::string> replaces, std::string &subject)
+std::string str_replace(const std::vector<std::string> &searches, const std::vector<std::string> &replaces, std::string &subject)
 {
   for (int i = 0; i < searches.size(); i++)
   {
