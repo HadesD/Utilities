@@ -1,3 +1,5 @@
+# MAINTAINER Dark.Hades < dark[dot]hades[dot]1102[at]gmail[dot]com >
+
 FROM eclipse/stack-base:ubuntu
 
 USER root
