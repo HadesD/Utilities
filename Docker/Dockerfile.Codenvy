@@ -2,7 +2,8 @@ FROM eclipse/stack-base:ubuntu
 
 USER root
 RUN apt-get update; \
-    apt-get install -y git cmake make gcc g++ automake pkg-config autoconfig libevent-dev python-dev libncurses5-dev zsh
+    apt-get install -y git cmake make gcc g++ pkg-config autoconf libevent-dev python-dev libncurses5-dev zsh
+
 RUN git clone https://github.com/vim/vim.git /GitHub/vim; \
     cd /GitHub/vim && \
     ./configure --with-features=huge \
@@ -22,7 +23,7 @@ RUN git clone https://github.com/tmux/tmux.git /GitHub/tmux; \
     ./autogen.sh && \
     ./configure && make && sudo make install
 
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+# RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 USER user
 RUN git clone https://HadesD@github.com/HadesD/dotfiles ~/dotfiles; \
