@@ -1,6 +1,13 @@
 FROM eclipse/stack-base:ubuntu
 
 USER root
+RUN apt-get update; \
+	apt-get install -y git vim tmux cmake make
+
+USER user
+RUN git clone https://HadesD@github.com/HadesD/dotfiles ~/dotfiles; \
+	cd ~/dotfiles && \
+    python install.py
 
 EXPOSE 22
 
