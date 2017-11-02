@@ -13,7 +13,7 @@ std::vector<std::string> str_split(const std::string &str, const char delimiter)
     internal.push_back(tok);
   }
   
-  return std::move(internal);
+  return internal;
 }
 
 // I don't recommend using the std namespace in production code.
@@ -23,7 +23,7 @@ std::vector<std::string> str_split(const std::string &str, const char delimiter)
 
 int main(/* int argc, char *argv[] */) {
   std::string myCSV = "one,two,three,four";
-  std::vector<std::string> sep = std::move(str_split(myCSV, ','));
+  std::vector<std::string> sep = str_split(myCSV, ',');
 
   // If using C++11 (which I recommend)
   /* for(const std::string &t : sep)
