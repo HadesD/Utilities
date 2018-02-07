@@ -1,31 +1,19 @@
 #!/usr/bin/env python
 
-'''
-Use docker container 's php to compile php code
-'''
-
 import os
 import sys
 import subprocess
 
-# PWD = os.environ['PWD']
+PHP_CONTAINER = 'phpfpmcompiler_php_1'
+
 PWD = os.getcwd()
-CMD = '/usr/bin/docker exec phpfpmcompiler_php_1 sh -c '
-CMD = CMD + "'cd " + PWD + ' && php'
+CMD = [
+    '/usr/bin/docker',
+    'exec',
+    '--workdir='+PWD,
+    PHP_CONTAINER,
+    'php'
+]
 
-lenArgv = len(sys.argv)
-if lenArgv < 1:
-  exit()
+subprocess.call(CMD + sys.argv[1:])
 
-if lenArgv == 3:
-  if sys.argv[1] == '-r':
-    CMD = CMD + ' -r "' + sys.argv[2] + '"'
-else:
-  for i in range(1, lenArgv):
-    CMD = CMD + ' ' + sys.argv[i]
-
-CMD = CMD + "'"
-
-# print(CMD)
-
-subprocess.call(CMD, shell=True)
