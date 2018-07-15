@@ -14,5 +14,6 @@
 ## Util Tools:
 - https://github.com/vmi/cocot | Cocot - Page code convert (Useful for EUC-JP or Old page code)
 
-## GCC
+## C++
 - Print current Preprocessor: ` gcc -mwin32 -dM -E -x c /dev/null | grep "WIN"`
+- Convert Windows 's UTF-8 to Another codepage: https://www.chilkatsoft.com/p/p_348.asp
