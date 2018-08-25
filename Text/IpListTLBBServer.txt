@@ -1,1 +1,1 @@
-150.95.104.240:7388:delete:pltt-kntlbb
+150.95.104.240:delete:pltt-kntlbb
