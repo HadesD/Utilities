@@ -1,6 +1,6 @@
-163.44.206.80:delete:NHD
-150.95.108.93:delete:tan-than-long
-150.95.109.211:delete:tan-thien-kiem
+163.44.206.80:add:NHD
+150.95.109.211:add:tan-thien-kiem
+150.95.108.93:add:tan-than-long
 103.90.225.137:delete:khin-tl
 103.92.24.196:delete:9999
 163.44.192.198:delete:the-ky
