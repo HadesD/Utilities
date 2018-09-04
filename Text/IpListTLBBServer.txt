@@ -3,9 +3,9 @@
 150.95.108.93:add:tan-than-long
 103.90.225.137:add:khin-tl
 103.92.24.196:add:9999
-163.44.192.198:delete:the-ky
+163.44.192.198:add:the-ky
 171.244.18.60:add:kinhho-pltt
 103.200.21.214:add:kinhho-nnp
-103.92.24.245:delete:vtl-gl
-103.92.24.244:delete:vtl-ph
+103.92.24.245:add:vtl-gl
+103.92.24.244:add:vtl-ph
 103.92.24.196:add:tvk
