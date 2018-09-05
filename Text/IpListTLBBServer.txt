@@ -8,4 +8,5 @@
 103.200.21.214:add:kinhho-nnp
 103.92.24.245:add:vtl-gl
 103.92.24.244:add:vtl-ph
-103.92.24.196:add:tvk
+103.92.24.196:add:thatvukiem
+103.90.225.238:add:tuyetvankiem
