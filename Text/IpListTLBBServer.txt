@@ -1,8 +1,8 @@
 163.44.206.80:delete:NHD
 150.95.109.211:delete:tan-thien-kiem
 150.95.108.93:delete:tan-than-long
-103.90.225.137:add:khin-tl
-103.92.24.196:add:9999
+103.90.225.137:delete:khin-tl
+103.92.24.196:delete:9999
 163.44.192.198:delete:the-ky
 171.244.18.60:delete:kinhho-pltt
 103.200.21.214:delete:kinhho-nnp
@@ -10,3 +10,8 @@
 103.92.24.244:delete:vtl-ph
 103.92.24.196:delete:thatvukiem
 103.90.225.238:delete:tuyetvankiem
+103.90.225.122:delete:tngh
+171.244.18.19:delete:9999-tangkiem
+171.244.18.23:delete:9999-new
+163.44.207.80:delete:dung--
+103.92.24.196:delete:tl-kyniem
