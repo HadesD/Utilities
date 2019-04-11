@@ -105,6 +105,11 @@ public static class Win32Api
 
     [DllImport("kernel32.dll")]
     public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+
+    [DllImport("kernel32.dll", SetLastError=true)]
+    public static extern bool CloseHandle(
+        IntPtr hObject   // handle to object
+    );
 }
 "@
 
@@ -121,9 +126,26 @@ $hwndProcess = Get-Process | ? {$_.MainWindowHandle -eq $activeHandle}
 #$win32::PostMessage($activeHandle, 0x0102, 65, 0);
 
 #$win32::FindWindow([IntPtr]::Zero, "JamShadowClass");
+
+# Get window Handle
 $pulseHwnd = [Win32Api]::FindWindow("JamShadowClass", [IntPtr]::Zero);
-Echo $pulseHwnd
-$pulsePId = [Win32Api]::GetWindowThreadProcessId($pulseHwnd, [System.Management.Automation.PSReference]$pulsePId);
-Echo $pulsePId
-$hPId = [Win32Api]::OpenProcess(0x0010, $true, $pulsePId);
-Echo $hPId
+Echo "Pulse Secure hWnd: $pulseHwnd"
+
+<#
+$pulsePId = [UInt32]::Zero
+$retCode = [Win32Api]::GetWindowThreadProcessId($pulseHwnd, [ref] $pulsePId);
+Echo "Pulse Secure PId: $pulsePId"
+$hPId = [Win32Api]::OpenProcess(0x1F0FFF, $true, $pulsePId);
+Echo "Pulse Secure Process Handle: $hPId"
+#>
+
+# Processing
+while($true)
+{
+    [Win32Api]::PostMessage($pulseHwnd, 13, 65, 0);
+    sleep -Milliseconds 1000
+}
+
+# Close Handle
+$retCloseHandle = [Win32Api]::CloseHandle($hPId)
+Echo "CloseHandle of PId($pulsePId): $retCloseHandle"
