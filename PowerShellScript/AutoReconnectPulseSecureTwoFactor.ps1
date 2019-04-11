@@ -1,18 +1,19 @@
+# https://qiita.com/nimzo6689/items/488467dbe0c4e5645745
+
 Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName System.Windows.Forms
-
 <#
-https://qiita.com/nimzo6689/items/488467dbe0c4e5645745
 .Synopsis
-   å®Ÿè¡Œä¸­ã®ä»»æ„ã®ãƒ—ãƒ­ã‚»ã‚¹ã«ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯ã‚’é€ã‚‹æ“ä½œã‚’ã—ã¾ã™ã€‚
+   実行中の任意のプロセスにキーストロークを送る操作をします。
 .DESCRIPTION
-   ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯ã€ãƒ—ãƒ­ã‚»ã‚¹åãŒãã‚Œãžã‚ŒæœªæŒ‡å®šã®å ´åˆã€ä½•ã‚‚å®Ÿè¡Œã•ã‚Œã¾ã›ã‚“ã€‚
-   ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯ã®ã¿ãŒæŒ‡å®šã•ã‚ŒãŸå ´åˆã¯å®Ÿè¡Œæ™‚ã®ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã¸ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯ã‚’é€ã‚Šã€
-   ãƒ—ãƒ­ã‚»ã‚¹åã®ã¿ãŒæŒ‡å®šã•ã‚ŒãŸå ´åˆã¯ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ã®ã¿ãŒæŒ‡å®šã•ã‚ŒãŸãƒ—ãƒ­ã‚»ã‚¹ã«å¤‰æ›´ã—ã¾ã™ã€‚
+   パラメータのキーストローク、プロセス名がそれぞれ未指定の場合、何も実行されません。
+   キーストロークのみが指定された場合は実行時のフォーカスへキーストロークを送り、
+   プロセス名のみが指定された場合はフォーカスのみが指定されたプロセスに変更します。
 .EXAMPLE
    Send-Keys -KeyStroke "test.%~" -ProcessName "LINE"
-   ã“ã®ã‚³ãƒžãƒ³ãƒ‰ã¯æ—¢ã«èµ·å‹•ä¸­ã®LINEã‚¢ãƒ—ãƒªã«å¯¾ã—ã¦"test."ã¨å…¥åŠ›ã—ã€
-   Altã‚­ãƒ¼ã‚’æŠ¼ã—ãªãŒã‚‰Enterã‚­ãƒ¼ã‚’æŠ¼ä¸‹ã™ã‚‹æ“ä½œã‚’ã—ã¦ã„ã¾ã™ã€‚
+
+   このコマンドは既に起動中のLINEアプリに対して"test."と入力し、
+   Altキーを押しながらEnterキーを押下する操作をしています。
 #>
 function Send-Keys
 {
@@ -20,9 +21,9 @@ function Send-Keys
     [Alias("sdky")]
     Param
     (
-        # ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯
-        # ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã«é€ã‚ŠãŸã„ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯å†…å®¹ã‚’æŒ‡å®šã—ã¾ã™ã€‚
-        # ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯ã®è¨˜è¿°æ–¹æ³•ã¯ä¸‹è¨˜ã®Webãƒšãƒ¼ã‚¸ã‚’å‚ç…§ã€‚
+        # キーストローク
+        # アプリケーションに送りたいキーストローク内容を指定します。
+        # キーストロークの記述方法は下記のWebページを参照。
         # https://msdn.microsoft.com/ja-jp/library/cc364423.aspx
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true,
@@ -30,16 +31,16 @@ function Send-Keys
         [string]
         $KeyStroke,
 
-        # ãƒ—ãƒ­ã‚»ã‚¹å
-        # ã‚­ãƒ¼ã‚¹ãƒˆãƒ­ãƒ¼ã‚¯ã‚’é€ã‚ŠãŸã„ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ãƒ—ãƒ­ã‚»ã‚¹åã‚’æŒ‡å®šã—ã¾ã™ã€‚
-        # è¤‡æ•°ã‚ã‚‹å ´åˆã¯ã€PIDãŒä¸€ç•ªä½Žã„ãƒ—ãƒ­ã‚»ã‚¹ã‚’å¯¾è±¡ã¨ã™ã‚‹ã€‚
+        # プロセス名
+        # キーストロークを送りたいアプリケーションのプロセス名を指定します。
+        # 複数ある場合は、PIDが一番低いプロセスを対象とする。
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true)]
         [string]
         $ProcessName,
 
-        # å¾…æ©Ÿæ™‚é–“
-        # ã‚³ãƒžãƒ³ãƒ‰ã‚’å®Ÿè¡Œã™ã‚‹å‰ã®å¾…æ©Ÿæ™‚é–“ã‚’ãƒŸãƒªç§’å˜ä½ã§æŒ‡å®šã—ã¾ã™ã€‚
+        # 待機時間
+        # コマンドを実行する前の待機時間をミリ秒単位で指定します。
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true)]
         [int]
@@ -53,61 +54,76 @@ function Send-Keys
         sleep -Milliseconds $Wait
         if ($Process -ne $null)
         {
-            [Microsoft.VisualBasic.Interaction]::AppActivate($Process.Id)
+            [Microsoft.VisualBasic.Interaction]::AppActivate($Process.ID)
         }
         [System.Windows.Forms.SendKeys]::SendWait($KeyStroke)
     }
 }
+
 # https://qiita.com/y-takano/items/cb752ad6a10e550ec92f
-$Win32 = &{
+
 # ========= C#言語によるWin32Api関数定義(ここから) =========
-$cscode = @"
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
 
-[DllImport("user32.dll")]
-public static extern int MessageBox(
-    IntPtr hWnd,        // オーナーウィンドウのハンドル
-    string lpText,      // メッセージボックス内のテキスト
-    string lpCaption,   // メッセージボックスのタイトル
-    UInt32 uType        // メッセージボックスのスタイル
-);
+public static class Win32Api
+{
+    [DllImport("user32.dll")]
+    public static extern int MessageBox(
+        IntPtr hWnd,        // オーナーウィンドウのハンドル
+        string lpText,      // メッセージボックス内のテキスト
+        string lpCaption,   // メッセージボックスのタイトル
+        UInt32 uType        // メッセージボックスのスタイル
+    );
 
-[DllImport("user32.dll")]
-public static extern IntPtr FindWindow(
-    string lpClassName,  // クラス名
-    string lpWindowName  // ウィンドウ名
-);
+    [DllImport("user32.dll")]
+    public static extern IntPtr FindWindow(String sClassName, IntPtr sAppName);
 
-[DllImport("user32.dll")]
-public static extern bool SetWindowPos(
-    IntPtr hWnd,            // ウィンドウのハンドル
-    IntPtr hWndInsertAfter, // 配置順序のハンドル
-    int    X,               // 横方向の位置
-    int    Y,               // 縦方向の位置
-    int    cx,              // 幅
-    int    cy,              // 高さ
-    UInt32 uFlags           // ウィンドウ位置のオプション
-);
+    [DllImport("kernel32.dll")]
+    public static extern uint GetLastError();
 
-[DllImport("user32.dll")]
-public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(
+        IntPtr hWnd,            // ウィンドウのハンドル
+        IntPtr hWndInsertAfter, // 配置順序のハンドル
+        int    X,               // 横方向の位置
+        int    Y,               // 縦方向の位置
+        int    cx,              // 幅
+        int    cy,              // 高さ
+        UInt32 uFlags           // ウィンドウ位置のオプション
+    );
 
-[DllImport("user32.dll")]
-public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")]
+    public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
 
-"@
-# ========= C#言語によるWin32Api関数定義(ここまで) =========
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
 
-    return (add-type -memberDefinition $cscode -name "Win32ApiFunctions" -passthru)
+    [DllImport("user32.dll", SetLastError=true)]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 }
-
+"@
 
 # Get current active app
-$activeHandle = $win32::GetForegroundWindow()
+$activeHandle = [Win32Api]::GetForegroundWindow()
 $hwndProcess = Get-Process | ? {$_.MainWindowHandle -eq $activeHandle}
 #Echo $hwndProcess
 
 # Test
 #Send-Keys '123456{Enter}' -ProcessName 'mintty'
 #[Microsoft.VisualBasic.Interaction]::AppActivate($hwndProcess.Id)
+#Echo $activeHandle
+#$win32::PostMessage($activeHandle, 0x0100, 65, 0);
+#$win32::PostMessage($activeHandle, 0x0102, 65, 0);
 
-$win32::PostMessage($activeHandle, 0x0100, 100, 0);
+#$win32::FindWindow([IntPtr]::Zero, "JamShadowClass");
+$pulseHwnd = [Win32Api]::FindWindow("JamShadowClass", [IntPtr]::Zero);
+Echo $pulseHwnd
+$pulsePId = [Win32Api]::GetWindowThreadProcessId($pulseHwnd, [System.Management.Automation.PSReference]$pulsePId);
+Echo $pulsePId
+$hPId = [Win32Api]::OpenProcess(0x0010, $true, $pulsePId);
+Echo $hPId
