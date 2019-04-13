@@ -54,6 +54,21 @@ public static class Win32Api
 }
 "@
 
+$otpAuthFilePath = "$env:USERPROFILE/PulseSecureOtpAuth.txt"
+
+if (![System.IO.File]::Exists($otpAuthFilePath))
+{
+    Echo '' | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
+}
+
+[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
+$otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox("Enter OtpAuth RawText:", "OtpAuth", [IO.File]::ReadAllText($otpAuthFilePath))
+if ([String]::IsNullOrEmpty($otpAuthText))
+{
+    exit
+}
+Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
+
 # Processing
 while($true)
 {
