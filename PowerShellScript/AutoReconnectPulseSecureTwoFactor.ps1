@@ -11,7 +11,6 @@ Add-Type -AssemblyName System.Windows.Forms
    プロセス名のみが指定された場合はフォーカスのみが指定されたプロセスに変更します。
 .EXAMPLE
    Send-Keys -KeyStroke "test.%~" -ProcessName "LINE"
-
    このコマンドは既に起動中のLINEアプリに対して"test."と入力し、
    Altキーを押しながらEnterキーを押下する操作をしています。
 #>
@@ -66,7 +65,6 @@ function Send-Keys
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
-
 public static class Win32Api
 {
     [DllImport("user32.dll")]
@@ -76,13 +74,10 @@ public static class Win32Api
         string lpCaption,   // メッセージボックスのタイトル
         UInt32 uType        // メッセージボックスのスタイル
     );
-
     [DllImport("user32.dll")]
     public static extern IntPtr FindWindow(String sClassName, IntPtr sAppName);
-
     [DllImport("kernel32.dll")]
     public static extern uint GetLastError();
-
     [DllImport("user32.dll")]
     public static extern bool SetWindowPos(
         IntPtr hWnd,            // ウィンドウのハンドル
@@ -93,19 +88,14 @@ public static class Win32Api
         int    cy,              // 高さ
         UInt32 uFlags           // ウィンドウ位置のオプション
     );
-
     [DllImport("user32.dll")]
     public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
-
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
-
     [DllImport("user32.dll", SetLastError=true)]
     public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
-
     [DllImport("kernel32.dll")]
     public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-
     [DllImport("kernel32.dll", SetLastError=true)]
     public static extern bool CloseHandle(
         IntPtr hObject   // handle to object
@@ -132,7 +122,16 @@ while($true)
 {
     # Get window Handle
     $pulseHwnd = [Win32Api]::FindWindow("JamShadowClass", [IntPtr]::Zero);
+    If ($pulseHwnd -eq 0)
+    {
+        # Start-Process -FilePath Chrome -ArgumentList chrome-extension://bhghoamapcdpbohphigoooaddinpkbai/view/popup.html
+        Sleep -Seconds 5
+        continue;
+    }
+
     Echo "Pulse Secure hWnd: $pulseHwnd"
+    
+    Start-Process -FilePath Chrome -ArgumentList chrome-extension://bhghoamapcdpbohphigoooaddinpkbai/view/popup.html
 
     <#
     $pulsePId = [UInt32]::Zero
