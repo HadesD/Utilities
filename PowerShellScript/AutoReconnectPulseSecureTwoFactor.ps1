@@ -1,3 +1,5 @@
+Echo "Starting..."
+
 Add-Type -AssemblyName System.Web
 
 function Convert-Base32ToByte
@@ -109,6 +111,67 @@ function Get-TimeBasedOneTimePassword
     return $otpStr
 }
 
+Add-Type -AssemblyName Microsoft.VisualBasic
+Add-Type -AssemblyName System.Windows.Forms
+
+<#
+.Synopsis
+   実行中の任意のプロセスにキーストロークを送る操作をします。
+.DESCRIPTION
+   パラメータのキーストローク、プロセス名がそれぞれ未指定の場合、何も実行されません。
+   キーストロークのみが指定された場合は実行時のフォーカスへキーストロークを送り、
+   プロセス名のみが指定された場合はフォーカスのみが指定されたプロセスに変更します。
+.EXAMPLE
+   Send-Keys -KeyStroke "test.%~" -ProcessName "LINE"
+
+   このコマンドは既に起動中のLINEアプリに対して"test."と入力し、
+   Altキーを押しながらEnterキーを押下する操作をしています。
+#>
+function Send-Keys
+{
+    [CmdletBinding()]
+    [Alias("sdky")]
+    Param
+    (
+        # キーストローク
+        # アプリケーションに送りたいキーストローク内容を指定します。
+        # キーストロークの記述方法は下記のWebページを参照。
+        # https://msdn.microsoft.com/ja-jp/library/cc364423.aspx
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$true,
+                   Position=0)]
+        [string]
+        $KeyStroke,
+
+        # プロセス名
+        # キーストロークを送りたいアプリケーションのプロセス名を指定します。
+        # 複数ある場合は、PIDが一番低いプロセスを対象とする。
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$true)]
+        [string]
+        $ProcessName,
+
+        # 待機時間
+        # コマンドを実行する前の待機時間をミリ秒単位で指定します。
+        [Parameter(Mandatory=$false,
+                   ValueFromPipelineByPropertyName=$true)]
+        [int]
+        $Wait = 0
+    )
+
+    Process
+    {
+        $Process = ps | ? {$_.Name -eq $ProcessName} | sort -Property CPU -Descending | select -First 1
+        Write-Verbose $Process", KeyStroke = "$KeyStroke", Wait = "$Wait" ms."
+        sleep -Milliseconds $Wait
+        if ($Process -ne $null)
+        {
+            [Microsoft.VisualBasic.Interaction]::AppActivate($Process.ID)
+        }
+        [System.Windows.Forms.SendKeys]::SendWait($KeyStroke)
+    }
+}
+
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -121,9 +184,13 @@ public static class Win32Api
 
     [DllImport("user32.dll")]
     public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern uint SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("User32.dll")]
     public static extern long GetClassName(IntPtr hWnd, StringBuilder lpClassName, long nMaxCount);
@@ -160,30 +227,82 @@ public static class Win32Api
 
 $otpAuthFilePath = "$env:USERPROFILE/PulseSecureOtpAuth.txt"
 
-if (![System.IO.File]::Exists($otpAuthFilePath))
+function InputOtpAuthText
 {
-    Echo '' | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
+    if (![System.IO.File]::Exists($otpAuthFilePath))
+    {
+        Write-Host "Creating $otpAuthFilePath"
+        Echo '' | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
+    }
+
+    Write-Host "Please input your OtpAuth RawText in prompted window!"
+    $otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox("Enter OtpAuth RawText:", "OtpAuth", [IO.File]::ReadAllText($otpAuthFilePath)) | foreach { $_.trim() }
+    if ([String]::IsNullOrEmpty($otpAuthText))
+    {
+        exit
+    }
+
+    Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
+    Write-Host "Saved AuthRawText!"
 }
 
-[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
-$otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox("Enter OtpAuth RawText:", "OtpAuth", [IO.File]::ReadAllText($otpAuthFilePath)) | foreach { $_.trim() }
-if ([String]::IsNullOrEmpty($otpAuthText))
+function GetSecret
 {
-    exit
+    $otpAuthText = $null
+
+    if (![System.IO.File]::Exists($otpAuthFilePath))
+    {
+        $otpAuthText = InputOtpAuthText;
+    }
+    else
+    {
+        $otpAuthText = [IO.File]::ReadAllText($otpAuthFilePath);
+    }
+
+    $url_parse = [System.Uri]($otpAuthText);
+
+    if (!$url_parse)
+    {
+        Write-Warning "Can not parse OtpUri";
+        return $null;
+    }
+
+    $query = $url_parse.Query;
+    if (!$query)
+    {
+        Write-Warning "Can not get Query from input Uri";
+        return $null;
+    }
+
+    $queries = [System.Web.HttpUtility]::ParseQueryString($query);
+    if (!$queries)
+    {
+        Write-Warning "Can not get Array from Query";
+        return $null;
+    }
+
+    return $queries['secret'];
 }
-Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
 
-$url_parse = [System.Uri]($otpAuthText)
-$query = $url_parse.Query;
-$path = $url_parse.Segments[1];
-$queries = [System.Web.HttpUtility]::ParseQueryString($query);
-$sharedSecret = $queries['secret'];
-
-while($true)
+$sharedSecret = $null;
+while (!$sharedSecret)
 {
-    Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
-    Sleep -Seconds 1
+    # try
+    #{
+        $sharedSecret = GetSecret;
+        # Echo "Secret: $sharedSecret"
+        If (!$sharedSecret)
+        {
+            InputOtpAuthText;
+        }
+    #}
+    # catch
+    #{
+        # Write-Warning $_
+    #}
 }
+
+Echo "Found Secret. Application is started successfully!"
 
 # Processing
 while($true)
@@ -192,15 +311,18 @@ while($true)
     $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", "Connect to:");
     If ($pulseHwnd -eq 0)
     {
-        # Start-Process -FilePath Chrome -ArgumentList chrome-extension://bhghoamapcdpbohphigoooaddinpkbai/view/popup.html
         Sleep -Seconds 5
         continue;
     }
 
     Echo "Pulse Secure hWnd: $pulseHwnd"
-    
-    Start-Process -FilePath Chrome -ArgumentList chrome-extension://bhghoamapcdpbohphigoooaddinpkbai/view/popup.html
 
-    [Win32Api]::PostMessage($pulseHwnd, 0x0100, 65, 0);
-    sleep -Milliseconds 1000
+    $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
+    Echo "Now password: $password"
+    
+    [Win32Api]::SetForegroundWindow($pulseHwnd);
+    [System.Windows.Forms.SendKeys]::SendWait($password);
+    [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
+
+    sleep -Milliseconds 2000
 }
