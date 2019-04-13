@@ -1,216 +1,112 @@
-# https://qiita.com/nimzo6689/items/488467dbe0c4e5645745
+Add-Type -AssemblyName System.Web
 
-Add-Type -AssemblyName Microsoft.VisualBasic
-Add-Type -AssemblyName System.Windows.Forms
-
-
-$Script:Base32Charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-
-<#
-.Synopsis
-  Generate an 80-bit key, BASE32 encoded, secret
-  and a URL to Google Charts which will show it as a QR code.
-  The QR code can be used with the Google Authenticator app
-.Example
-  PS C:\> New-GoogleAuthenticatorSecret
-  Secret           QrCodeUri                                                                                          
-  ------           ---------                                                                                          
-  5WYYADYB5DK2BIOV http://chart.apis.google[..]
-.Example
-  PS C:\> New-GoogleAuthenticatorSecret -Online
-  # *web browser opens*
-.Example
-  # Take a secret code from a real website,
-  # but put your own text around it to show in the app
-  PS C:\> New-GoogleAuthenticatorSecret -UseThisSecretCode HP44SIFI2GFDZHT6 -Name "me@example.com" -Issuer "My bank 💎" -Online | fl *
-  Secret    : HP44SIFI2GFDZHT6
-  KeyUri    : otpauth://totp/me%40example.com?secret=HP44SIFI2GFDZHT6&issuer=My%20bank%20%F0%9F%92%8E
-  QrCodeUri : https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=otpauth%3A%2F%2Ftotp%2Fme%25[..]
-  # web browser opens, and you can scan your bank code into the app, with new text around it.
-#>
-function New-GoogleAuthenticatorSecret
+function Convert-Base32ToByte
 {
-    [CmdletBinding()]
-    Param(
-        # Secret length in bytes, must be a multiple of 5 bits for neat BASE32 encoding
-        [int]
-        [ValidateScript({($_ * 8) % 5 -eq 0})]
-        $SecretLength = 10,
-
-        # Use an existing secret code, don't generate one, just wrap it with new text
-        [string]
-        $UseThisSecretCode = '',
-        
-        # Launches a web browser to show a QR Code
-        [switch]
-        $Online = $false,
-
-
-        # Name is text that will appear under the entry in Google Authenticator app, e.g. a login name
-        [string] $Name = 'Example Website:alice@example.com',
-
-
-        # Issuer is text that will appear over the entry in Google Authenticator app
-        [string]
-        $Issuer = 'Example Corp 😃'
-    )
-
-
-    # if there's a secret provided then use it, otherwise we need to generate one
-    if ($PSBoundParameters.ContainsKey('UseThisSecretCode')) {
-    
-        $Base32Secret = $UseThisSecretCode
-    
-    } else {
-
-        # Generate random bytes for the secret
-        $byteArrayForSecret = [byte[]]::new($SecretLength)
-        [Security.Cryptography.RNGCryptoServiceProvider]::new().GetBytes($byteArrayForSecret, 0, $SecretLength)
-    
-
-        # BASE32 encode the bytes
-        # 5 bits per character doesn't align with 8-bits per byte input,
-        # and needs careful code to take some bits from separate bytes.
-        # Because we're in a scripting language let's dodge that work.
-        # Instead, convert the bytes to a 10100011 style string:
-        $byteArrayAsBinaryString = -join $byteArrayForSecret.ForEach{
-            [Convert]::ToString($_, 2).PadLeft(8, '0')
-        }
-
-
-        # then use regex to get groups of 5 bits 
-        # -> conver those to integer 
-        # -> lookup that as an index into the BASE32 character set 
-        # -> result string
-        $Base32Secret = [regex]::Replace($byteArrayAsBinaryString, '.{5}', {
-            param($Match)
-            $Script:Base32Charset[[Convert]::ToInt32($Match.Value, 2)]
-        })
-    }
-
-    # Generate the URI which needs to go to the Google Authenticator App.
-    # URI escape each component so the name and issuer can have punctiation characters.
-    $otpUri = "otpauth://totp/{0}?secret={1}&issuer={2}" -f @(
-                [Uri]::EscapeDataString($Name),
-                $Base32Secret
-                [Uri]::EscapeDataString($Issuer)
-              )
-
-
-    # Double-encode because we're going to embed this into a Google Charts URI,
-    # and these need to still be encoded in the QR code after Charts webserver has decoded once.
-    $encodedUri = [Uri]::EscapeDataString($otpUri)
-
-
-    # Tidy output, with a link to Google Chart API to make a QR code
-    $keyDetails = [PSCustomObject]@{
-        Secret = $Base32Secret
-        KeyUri = $otpUri
-        QrCodeUri = "https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=${encodedUri}"
-    }
-
-
-    # Online switch references Get-Help -Online and launches a system WebBrowser.
-    if ($Online) {
-        Start-Process $keyDetails.QrCodeUri
-    }
-
-
-    $keyDetails
-}
-
-<#
-.Synopsis
-  Takes a Google Authenticator secret like 5WYYADYB5DK2BIOV
-  and generates the PIN code for it
-.Example
-  PS C:\>Get-GoogleAuthenticatorPin -Secret 5WYYADYB5DK2BIOV
-  372 251
-#>
-function Get-GoogleAuthenticatorPin
-{
-    [CmdletBinding()]
-    Param
+    param
     (
-        # BASE32 encoded Secret e.g. 5WYYADYB5DK2BIOV
-        [Parameter(Mandatory=$true,
-                   ValueFromPipelineByPropertyName=$true,
-                   Position=0)]
-        [string]
-        $Secret,
-
-        # OTP time window in seconds
-        $TimeWindow = 30
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Base32
     )
 
+    # RFC 4648 Base32 alphabet
+    $rfc4648 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
 
-    # Convert the secret from BASE32 to a byte array
-    # via a BigInteger so we can use its bit-shifting support,
-    # instead of having to handle byte boundaries in code.
-    $bigInteger = [Numerics.BigInteger]::Zero
-    foreach ($char in ($secret.ToUpper() -replace '[^A-Z2-7]').GetEnumerator()) {
-        $bigInteger = ($bigInteger -shl 5) -bor ($Script:Base32Charset.IndexOf($char))
+    $bits = ''
+
+    # Convert each Base32 character to the binary value between starting at
+    # 00000 for A and ending with 11111 for 7.
+    foreach ($char in $Base32.ToUpper().ToCharArray())
+    {
+        $bits += [Convert]::ToString($rfc4648.IndexOf($char), 2).PadLeft(5, '0')
     }
 
-    [byte[]]$secretAsBytes = $bigInteger.ToByteArray()
-    
-
-    # BigInteger sometimes adds a 0 byte to the end,
-    # if the positive number could be mistaken as a two's complement negative number.
-    # If it happens, we need to remove it.
-    if ($secretAsBytes[-1] -eq 0) {
-        $secretAsBytes = $secretAsBytes[0..($secretAsBytes.Count - 2)]
+    # Convert 8 bit chunks to bytes, ignore the last bits.
+    for ($i = 0; $i -le ($bits.Length - 8); $i += 8)
+    {
+        [Byte] [Convert]::ToInt32($bits.Substring($i, 8), 2)
     }
+}
+<#
+    .SYNOPSIS
+        Generate a Time-Base One-Time Password based on RFC 6238.
+    .DESCRIPTION
+        This command uses the reference implementation of RFC 6238 to calculate
+        a Time-Base One-Time Password. It bases on the HMAC SHA-1 hash function
+        to generate a shot living One-Time Password.
+    .INPUTS
+        None.
+    .OUTPUTS
+        System.String. The one time password.
+    .EXAMPLE
+        PS C:\> Get-TimeBasedOneTimePassword -SharedSecret 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        Get the Time-Based One-Time Password at the moment.
+    .NOTES
+        Author     : Claudio Spizzi
+        License    : MIT License
+    .LINK
+        https://github.com/claudiospizzi/SecurityFever
+        https://tools.ietf.org/html/rfc6238
+#>
+function Get-TimeBasedOneTimePassword
+{
+    [CmdletBinding()]
+    [Alias('Get-TOTP')]
+    param
+    (
+        # Base 32 formatted shared secret (RFC 4648).
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $SharedSecret,
 
+        # The date and time for the target calculation, default is now (UTC).
+        [Parameter(Mandatory = $false)]
+        [System.DateTime]
+        $Timestamp = (Get-Date).ToUniversalTime(),
 
-    # BigInteger stores bytes in Little-Endian order, 
-    # but we need them in Big-Endian order.
-    [array]::Reverse($secretAsBytes)
-    
+        # Token length of the one-time password, default is 6 characters.
+        [Parameter(Mandatory = $false)]
+        [System.Int32]
+        $Length = 6,
 
-    # Unix epoch time in UTC and divide by the window time,
-    # so the PIN won't change for that many seconds
-    $epochTime = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
-    
-    # Convert the time to a big-endian byte array
-    $timeBytes = [BitConverter]::GetBytes([int64][math]::Floor($epochTime / $TimeWindow))
-    if ([BitConverter]::IsLittleEndian) { 
-        [array]::Reverse($timeBytes) 
-    }
+        # The hash method to calculate the TOTP, default is HMAC SHA-1.
+        [Parameter(Mandatory = $false)]
+        [System.Security.Cryptography.KeyedHashAlgorithm]
+        $KeyedHashAlgorithm = (New-Object -TypeName 'System.Security.Cryptography.HMACSHA1'),
 
-    # Do the HMAC calculation with the default SHA1
-    # Google Authenticator app does support other hash algorithms, this code doesn't
-    $hmacGen = [Security.Cryptography.HMACSHA1]::new($secretAsBytes)
-    $hash = $hmacGen.ComputeHash($timeBytes)
+        # Baseline time to start counting the steps (T0), default is Unix epoch.
+        [Parameter(Mandatory = $false)]
+        [System.DateTime]
+        $Baseline = '1970-01-01 00:00:00',
 
+        # Interval for the steps in seconds (TI), default is 30 seconds.
+        [Parameter(Mandatory = $false)]
+        [System.Int32]
+        $Interval = 30
+    )
 
-    # The hash value is SHA1 size but we want a 6 digit PIN
-    # the TOTP protocol has a calculation to do that
-    #
-    # Google Authenticator app may support other PIN lengths, this code doesn't
-    
-    # take half the last byte
-    $offset = $hash[$hash.Length-1] -band 0xF
+    # Generate the number of intervals between T0 and the timestamp (now) and
+    # convert it to a byte array with the help of Int64 and the bit converter.
+    $numberOfSeconds   = ($Timestamp - $Baseline).TotalSeconds
+    $numberOfIntervals = [Convert]::ToInt64([Math]::Floor($numberOfSeconds / $Interval))
+    $byteArrayInterval = [System.BitConverter]::GetBytes($numberOfIntervals)
+    [Array]::Reverse($byteArrayInterval)
 
-    # use it as an index into the hash bytes and take 4 bytes from there, #
-    # big-endian needed
-    $fourBytes = $hash[$offset..($offset+3)]
-    if ([BitConverter]::IsLittleEndian) {
-        [array]::Reverse($fourBytes)
-    }
+    # Use the shared secret as a key to convert the number of intervals to a
+    # hash value.
+    $KeyedHashAlgorithm.Key = Convert-Base32ToByte -Base32 $SharedSecret
+    $hash = $KeyedHashAlgorithm.ComputeHash($byteArrayInterval)
 
-    # Remove the most significant bit
-    $num = [BitConverter]::ToInt32($fourBytes, 0) -band 0x7FFFFFFF
-    
-    # remainder of dividing by 1M
-    # pad to 6 digits with leading zero(s)
-    # and put a space for nice readability
-    $PIN = ($num % 1000000).ToString().PadLeft(6, '0').Insert(3, ' ')
+    # Calculate offset, binary and otp according to RFC 6238 page 13.
+    $offset = $hash[($hash.Length-1)] -band 0xf
+    $binary = (($hash[$offset + 0] -band '0x7f') -shl 24) -bor
+              (($hash[$offset + 1] -band '0xff') -shl 16) -bor
+              (($hash[$offset + 2] -band '0xff') -shl 8) -bor
+              (($hash[$offset + 3] -band '0xff'))
+    $otpInt = $binary % ([Math]::Pow(10, $Length))
+    $otpStr = $otpInt.ToString().PadLeft($Length, '0')
 
-    [PSCustomObject]@{
-        'PIN Code' = $PIN
-        'Seconds Remaining' = ($TimeWindow - ($epochTime % $TimeWindow))
-    }
+    return $otpStr
 }
 
 Add-Type -TypeDefinition @"
@@ -282,15 +178,11 @@ $query = $url_parse.Query;
 $path = $url_parse.Segments[1];
 $queries = [System.Web.HttpUtility]::ParseQueryString($query);
 $sharedSecret = $queries['secret'];
-#$SHAREDSECRET = [System.Convert]::ToBase64String(([System.Text.Encoding]::UTF8).GetBytes($queries['secret']));
-
-Echo "$sharedSecret | $path"
-Echo $url_parse
 
 while($true)
 {
-Get-GoogleAuthenticatorPin -Secret $sharedSecret
-Sleep -Seconds 1
+    Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
+    Sleep -Seconds 1
 }
 
 # Processing
