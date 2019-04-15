@@ -180,8 +180,8 @@ public static class Win32Api
 
     public static IntPtr GetWindowByClassAndTitle(string windowClassName, string windowTitle)
     {
-        StringBuilder classText = new StringBuilder(windowClassName.Length + 1);
-        StringBuilder windowText = new StringBuilder(windowTitle.Length + 1);
+        StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
+        StringBuilder windowText = new StringBuilder(50);
         IntPtr hWnd = GetWindow(GetForegroundWindow(), GW_HWNDFIRST);
 
         while (hWnd != IntPtr.Zero)
@@ -189,8 +189,9 @@ public static class Win32Api
             GetClassName(hWnd, classText, windowClassName.Length * 2);
             if (classText.ToString() == windowClassName)
             {
-                GetWindowText(hWnd, windowText, windowTitle.Length * 2);
+                GetWindowText(hWnd, windowText, 50);
                 string _wndTxt = windowText.ToString();
+                // Console.WriteLine(_wndTxt);
                 if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
                 {
                     // Console.WriteLine("Found hWnd");
@@ -289,10 +290,9 @@ Echo "Found Secret. Application is started successfully!"
 while($true)
 {
     # Get window Handle
-    $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", "Connect to: ");
+    $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", ": "); # Connect to:
     If ($pulseHwnd -eq 0)
     {
-        $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", "接続先:");
         If ($pulseHwnd -eq 0)
         {
             Sleep -Seconds 5
