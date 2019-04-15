@@ -114,28 +114,12 @@ function Get-TimeBasedOneTimePassword
 Add-Type -AssemblyName Microsoft.VisualBasic
 Add-Type -AssemblyName System.Windows.Forms
 
-<#
-.Synopsis
-   実行中の任意のプロセスにキーストロークを送る操作をします。
-.DESCRIPTION
-   パラメータのキーストローク、プロセス名がそれぞれ未指定の場合、何も実行されません。
-   キーストロークのみが指定された場合は実行時のフォーカスへキーストロークを送り、
-   プロセス名のみが指定された場合はフォーカスのみが指定されたプロセスに変更します。
-.EXAMPLE
-   Send-Keys -KeyStroke "test.%~" -ProcessName "LINE"
-
-   このコマンドは既に起動中のLINEアプリに対して"test."と入力し、
-   Altキーを押しながらEnterキーを押下する操作をしています。
-#>
 function Send-Keys
 {
     [CmdletBinding()]
     [Alias("sdky")]
     Param
     (
-        # キーストローク
-        # アプリケーションに送りたいキーストローク内容を指定します。
-        # キーストロークの記述方法は下記のWebページを参照。
         # https://msdn.microsoft.com/ja-jp/library/cc364423.aspx
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true,
@@ -143,16 +127,11 @@ function Send-Keys
         [string]
         $KeyStroke,
 
-        # プロセス名
-        # キーストロークを送りたいアプリケーションのプロセス名を指定します。
-        # 複数ある場合は、PIDが一番低いプロセスを対象とする。
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true)]
         [string]
         $ProcessName,
 
-        # 待機時間
-        # コマンドを実行する前の待機時間をミリ秒単位で指定します。
         [Parameter(Mandatory=$false,
                    ValueFromPipelineByPropertyName=$true)]
         [int]
@@ -207,12 +186,14 @@ public static class Win32Api
 
         while (hWnd != IntPtr.Zero)
         {
-            GetClassName(hWnd, classText, windowClassName.Length + 1);
+            GetClassName(hWnd, classText, windowClassName.Length * 2);
             if (classText.ToString() == windowClassName)
             {
-                GetWindowText(hWnd, windowText, windowTitle.Length + 1);
-                if (windowText.ToString().Contains(windowTitle))
+                GetWindowText(hWnd, windowText, windowTitle.Length * 2);
+                string _wndTxt = windowText.ToString();
+                if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
                 {
+                    // Console.WriteLine("Found hWnd");
                     break;
                 }
             }
@@ -308,11 +289,15 @@ Echo "Found Secret. Application is started successfully!"
 while($true)
 {
     # Get window Handle
-    $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", "Connect to:");
+    $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", "Connect to: ");
     If ($pulseHwnd -eq 0)
     {
-        Sleep -Seconds 5
-        continue;
+        $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", "接続先:");
+        If ($pulseHwnd -eq 0)
+        {
+            Sleep -Seconds 5
+            continue;
+        }
     }
 
     Echo "Pulse Secure hWnd: $pulseHwnd"
