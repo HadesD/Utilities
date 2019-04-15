@@ -158,18 +158,24 @@ using System.Text;
 
 public static class Win32Api
 {
-    static int GW_HWNDFIRST = 0;
-    static int GW_HWNDNEXT = 2;
+    static const int GW_HWNDFIRST = 0;
+    static const int GW_HWNDNEXT = 2;
+
+    static const int WM_GETTEXT = 0x000D;
 
     [DllImport("user32.dll")]
     public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern uint SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+    public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, StringBuilder lParam);
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
     [DllImport("User32.dll")]
     public static extern long GetClassName(IntPtr hWnd, StringBuilder lpClassName, long nMaxCount);
@@ -204,8 +210,22 @@ public static class Win32Api
 
         return hWnd;
     }
+
+    public static IntPtr GetWindowElement(IntPtr parentHwnd, string lpszClass, string lpszWindow)
+    {
+        IntPtr hElmt = IntPtr.Zero;
+
+        return hElmt;
+    }
 }
 "@
+
+if (-not ([System.Management.Automation.PSTypeName]'Win32Api').Type)
+{
+    Echo "Script is corrupted. Not found Win32Api type.";
+    Echo "Please check script or contact the Author 's team";
+    exit;
+}
 
 $otpAuthFilePath = "$env:USERPROFILE/PulseSecureOtpAuth.txt"
 
@@ -291,14 +311,14 @@ while($true)
 {
     # Get window Handle
     $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", ": "); # Connect to:
-    If ($pulseHwnd -eq 0)
+    If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
     {
-        If ($pulseHwnd -eq 0)
-        {
-            Sleep -Seconds 5
-            continue;
-        }
+        Sleep -Seconds 5
+        continue;
     }
+
+    # Get Button
+    $btnHwnd = [Win32Api]::FindWindowEx($pulseHwnd, [IntPtr]::Zero, "JAM_BitmapButton", "C");
 
     Echo "Pulse Secure hWnd: $pulseHwnd"
 
