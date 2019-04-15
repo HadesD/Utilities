@@ -160,6 +160,7 @@ public static class Win32Api
 {
     const int GW_HWNDFIRST = 0;
     const int GW_HWNDNEXT = 2;
+    const int BM_CLICK = 0x00F5;
 
     const int WM_GETTEXT = 0x000D;
 
@@ -212,17 +213,35 @@ public static class Win32Api
         return hWnd;
     }
 
-    public static string DecodeFromUtf8(this string utf8String)
+    // Get hWnd of Pulse Secure Two-Factor Password window
+    public static IntPtr GetPs2FactorPwHwnd()
     {
-        // copy the string as UTF-8 bytes.
-        byte[] utf8Bytes = new byte[utf8String.Length];
-        for (int i=0;i<utf8String.Length;++i) {
-            //Debug.Assert( 0 <= utf8String[i] && utf8String[i] <= 255, "the char must be in byte's range");
-            utf8Bytes[i] = (byte)utf8String[i];
-        }
+        IntPtr hWnd = GetWindowByClassAndTitle("JamShadowClass", ": ");
 
-        return Encoding.UTF8.GetString(utf8Bytes,0,utf8Bytes.Length);
+        return hWnd;
     }
+
+    public static string UTF8toUnicode(string str)
+    {
+        byte[] bytUTF8;
+
+        byte[] bytUnicode;
+
+        string strUnicode = String.Empty;
+
+ 
+
+        bytUTF8 = Encoding.UTF8.GetBytes(str);
+
+        bytUnicode = Encoding.Convert(Encoding.UTF8, Encoding.Unicode, bytUTF8);
+
+        strUnicode = Encoding.Unicode.GetString(bytUnicode);
+
+ 
+
+        return strUnicode;
+    }
+
 
     public static IntPtr GetWindowElement(IntPtr parentHwnd, string lpszClass, string lpszWindow)
     {
@@ -323,7 +342,10 @@ Echo "Found Secret. Application is started successfully!"
 while($true)
 {
     # Get window Handle
-    $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", ": "); # Connect to:
+    $pulseHwnd = [Win32Api]::GetPs2FactorPwHwnd();
+    #$enc = ([System.Text.Encoding]::GetEncoding("UTF-8")).GetString({0xe6, 0x8e, 0xa5, 0xe7});
+    #Echo $enc
+    #[Win32Api]::UTF8toUnicode("e68ea5e7b69ae58588")
     #$pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", [Win32Api]::DecodeFromUtf8("d\u63a5\u7d9a\u5148")); # Connect to:
     If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
     {
@@ -350,7 +372,9 @@ while($true)
     
     [Win32Api]::SetForegroundWindow($pulseHwnd);
     [System.Windows.Forms.SendKeys]::SendWait($password);
-    [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
+
+    [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
+    # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
 
     sleep -Milliseconds 2000
 }
