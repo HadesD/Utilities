@@ -1,5 +1,5 @@
 Echo "Starting..."
-
+# $OutputEncoding='utf-8'
 Add-Type -AssemblyName System.Web
 
 function Convert-Base32ToByte
@@ -158,10 +158,10 @@ using System.Text;
 
 public static class Win32Api
 {
-    static const int GW_HWNDFIRST = 0;
-    static const int GW_HWNDNEXT = 2;
+    const int GW_HWNDFIRST = 0;
+    const int GW_HWNDNEXT = 2;
 
-    static const int WM_GETTEXT = 0x000D;
+    const int WM_GETTEXT = 0x000D;
 
     [DllImport("user32.dll")]
     public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
@@ -175,7 +175,7 @@ public static class Win32Api
     public static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow = null);
 
     [DllImport("User32.dll")]
     public static extern long GetClassName(IntPtr hWnd, StringBuilder lpClassName, long nMaxCount);
@@ -186,6 +186,7 @@ public static class Win32Api
 
     public static IntPtr GetWindowByClassAndTitle(string windowClassName, string windowTitle)
     {
+        Console.WriteLine(windowTitle);
         StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
         StringBuilder windowText = new StringBuilder(50);
         IntPtr hWnd = GetWindow(GetForegroundWindow(), GW_HWNDFIRST);
@@ -209,6 +210,18 @@ public static class Win32Api
         }
 
         return hWnd;
+    }
+
+    public static string DecodeFromUtf8(this string utf8String)
+    {
+        // copy the string as UTF-8 bytes.
+        byte[] utf8Bytes = new byte[utf8String.Length];
+        for (int i=0;i<utf8String.Length;++i) {
+            //Debug.Assert( 0 <= utf8String[i] && utf8String[i] <= 255, "the char must be in byte's range");
+            utf8Bytes[i] = (byte)utf8String[i];
+        }
+
+        return Encoding.UTF8.GetString(utf8Bytes,0,utf8Bytes.Length);
     }
 
     public static IntPtr GetWindowElement(IntPtr parentHwnd, string lpszClass, string lpszWindow)
@@ -311,16 +324,26 @@ while($true)
 {
     # Get window Handle
     $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", ": "); # Connect to:
+    #$pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", [Win32Api]::DecodeFromUtf8("d\u63a5\u7d9a\u5148")); # Connect to:
     If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
     {
         Sleep -Seconds 5
         continue;
     }
 
-    # Get Button
-    $btnHwnd = [Win32Api]::FindWindowEx($pulseHwnd, [IntPtr]::Zero, "JAM_BitmapButton", "C");
-
     Echo "Pulse Secure hWnd: $pulseHwnd"
+
+    # Get Button
+    $btnHwnd = [Win32Api]::FindWindowEx($pulseHwnd, [IntPtr]::Zero, "JAM_BitmapButton");
+
+    if ((!$btnHwnd) -or ($btnHwnd -eq 0))
+    {
+        Echo "Not found submit button"
+        Sleep -Seconds 2
+        continue;
+    }
+
+    Echo "Btn hWnd: $btnHwnd"
 
     $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
     Echo "Now password: $password"
