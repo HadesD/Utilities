@@ -38,6 +38,7 @@ function Convert-Base32ToByte
         [Byte] [Convert]::ToInt32($bits.Substring($i, 8), 2)
     }
 }
+
 <#
     .SYNOPSIS
         Generate a Time-Base One-Time Password based on RFC 6238.
@@ -118,46 +119,6 @@ function Get-TimeBasedOneTimePassword
     $otpStr = $otpInt.ToString().PadLeft($Length, '0')
 
     return $otpStr
-}
-
-Add-Type -AssemblyName Microsoft.VisualBasic
-Add-Type -AssemblyName System.Windows.Forms
-
-function Send-Keys
-{
-    [CmdletBinding()]
-    [Alias("sdky")]
-    Param
-    (
-        # https://msdn.microsoft.com/ja-jp/library/cc364423.aspx
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true,
-                   Position=0)]
-        [string]
-        $KeyStroke,
-
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true)]
-        [string]
-        $ProcessName,
-
-        [Parameter(Mandatory=$false,
-                   ValueFromPipelineByPropertyName=$true)]
-        [int]
-        $Wait = 0
-    )
-
-    Process
-    {
-        $Process = ps | ? {$_.Name -eq $ProcessName} | sort -Property CPU -Descending | select -First 1
-        Write-Verbose $Process", KeyStroke = "$KeyStroke", Wait = "$Wait" ms."
-        sleep -Milliseconds $Wait
-        if ($Process -ne $null)
-        {
-            [Microsoft.VisualBasic.Interaction]::AppActivate($Process.ID)
-        }
-        [System.Windows.Forms.SendKeys]::SendWait($KeyStroke)
-    }
 }
 
 Add-Type -TypeDefinition @"
@@ -342,19 +303,12 @@ function GetSecret
 $sharedSecret = $null;
 while (!$sharedSecret)
 {
-    # try
-    #{
-        $sharedSecret = GetSecret;
-        # Echo "Secret: $sharedSecret"
-        If (!$sharedSecret)
-        {
-            InputOtpAuthText;
-        }
-    #}
-    # catch
-    #{
-        # Write-Warning $_
-    #}
+    $sharedSecret = GetSecret;
+    # Echo "Secret: $sharedSecret"
+    If (!$sharedSecret)
+    {
+        InputOtpAuthText;
+    }
 }
 
 Echo "Found Secret. Application is started successfully!"
@@ -364,10 +318,6 @@ while($true)
 {
     # Get window Handle
     $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle([IntPtr]::Zero, "JamShadowClass", ": ");
-    #$enc = ([System.Text.Encoding]::GetEncoding("UTF-8")).GetString({0xe6, 0x8e, 0xa5, 0xe7});
-    #Echo $enc
-    #[Win32Api]::UTF8toUnicode("e68ea5e7b69ae58588")
-    #$pulseHwnd = [Win32Api]::GetWindowByClassAndTitle("JamShadowClass", [Win32Api]::DecodeFromUtf8("d\u63a5\u7d9a\u5148")); # Connect to:
     If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
     {
         Sleep -Seconds 5
