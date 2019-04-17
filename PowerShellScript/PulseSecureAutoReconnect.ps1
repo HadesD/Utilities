@@ -167,25 +167,14 @@ using System.Text;
 
 public static class Win32Api
 {
-    const int GW_HWNDFIRST = 0;
-    const int GW_HWNDNEXT = 2;
-    const int BM_CLICK = 0x00F5;
-
-    const int WM_GETTEXT = 0x000D;
-
-    [DllImport("user32.dll")]
-    public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
-
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, StringBuilder lParam);
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")]
-    public static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
-    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow = null);
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
     [DllImport("User32.dll")]
     public static extern long GetClassName(IntPtr hWnd, StringBuilder lpClassName, long nMaxCount);
@@ -225,7 +214,7 @@ public static class Win32Api
         return hWnd;
     }
 
-    public static IntPtr GetChildHwnd(IntPtr hWndParent, string windowClassName, string windowTitle)
+    public static IntPtr GetChildHwnd(IntPtr hWndParent, string windowClassName, string windowTitle, bool isExact = false)
     {
         StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
         StringBuilder windowText = new StringBuilder(50);
@@ -241,24 +230,26 @@ public static class Win32Api
                 GetWindowText(hWnd, windowText, 50);
                 string _wndTxt = windowText.ToString();
                 Console.WriteLine(_wndTxt);
-                if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
+                if (isExact)
                 {
-                    // Console.WriteLine("Found hWnd");
-                    break;
+                    if (_wndTxt == windowTitle)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
+                    {
+                        // Console.WriteLine("Found hWnd");
+                        break;
+                    }
                 }
             }
             
             // Find Next
             hWnd = FindWindowEx(hWndParent, hWnd, null, null);
         }
-
-        return hWnd;
-    }
-
-    // Get hWnd of Pulse Secure Two-Factor Password window
-    public static IntPtr GetPs2FactorPwHwnd()
-    {
-        IntPtr hWnd = GetWindowByClassAndTitle(IntPtr.Zero, "JamShadowClass", ": ");
 
         return hWnd;
     }
@@ -271,25 +262,13 @@ public static class Win32Api
 
         string strUnicode = String.Empty;
 
- 
-
         bytUTF8 = Encoding.UTF8.GetBytes(str);
 
         bytUnicode = Encoding.Convert(Encoding.UTF8, Encoding.Unicode, bytUTF8);
 
         strUnicode = Encoding.Unicode.GetString(bytUnicode);
 
- 
-
         return strUnicode;
-    }
-
-
-    public static IntPtr GetWindowElement(IntPtr parentHwnd, string lpszClass, string lpszWindow)
-    {
-        IntPtr hElmt = IntPtr.Zero;
-
-        return hElmt;
     }
 }
 "@
@@ -409,7 +388,7 @@ while($true)
 
     Echo "Btn hWnd: $btnHwnd"
 
-    $twoFactorInput = [Win32Api]::GetChildHwnd($pulseHwnd, "ATL:0148A1E0", "");
+    $twoFactorInput = [Win32Api]::GetChildHwnd($pulseHwnd, "ATL:0148A1E0", "", $true);
 
     Echo "Input hWnd: $twoFactorInput"
 
