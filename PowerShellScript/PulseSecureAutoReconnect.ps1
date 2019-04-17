@@ -1,4 +1,6 @@
 <#
+    .SYNOPSIS
+        Auto reconnect pulse secure when prompt appear.
     .INSTALLATION:
         <Windows> + <r> (Run)
         Input: powershell<Enter>
@@ -191,8 +193,10 @@ public static class Win32Api
     public static extern IntPtr GetWindow(IntPtr hWnd, int uCmd);
     [DllImport("User32.dll")]
     public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+    [DllImport("User32.dll")]
+    public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);
 
-    public static IntPtr GetWindowByClassAndTitle(string windowClassName, string windowTitle)
+    public static IntPtr GetWindowByClassAndTitle(IntPtr parentHwnd, string windowClassName, string windowTitle)
     {
         Console.WriteLine(windowTitle);
         StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
@@ -205,6 +209,7 @@ public static class Win32Api
             if (classText.ToString() == windowClassName)
             {
                 GetWindowText(hWnd, windowText, 50);
+                Console.WriteLine(windowText);
                 string _wndTxt = windowText.ToString();
                 // Console.WriteLine(_wndTxt);
                 if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
@@ -220,10 +225,40 @@ public static class Win32Api
         return hWnd;
     }
 
+    public static IntPtr GetChildHwnd(IntPtr hWndParent, string windowClassName, string windowTitle)
+    {
+        StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
+        StringBuilder windowText = new StringBuilder(50);
+
+        IntPtr hWnd = FindWindowEx(hWndParent, IntPtr.Zero, null, null);
+
+        while (hWnd != IntPtr.Zero)
+        {
+            GetClassName(hWnd, classText, windowClassName.Length * 2);
+
+            if (classText.ToString() == windowClassName)
+            {
+                GetWindowText(hWnd, windowText, 50);
+                string _wndTxt = windowText.ToString();
+                Console.WriteLine(_wndTxt);
+                if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
+                {
+                    // Console.WriteLine("Found hWnd");
+                    break;
+                }
+            }
+            
+            // Find Next
+            hWnd = FindWindowEx(hWndParent, hWnd, null, null);
+        }
+
+        return hWnd;
+    }
+
     // Get hWnd of Pulse Secure Two-Factor Password window
     public static IntPtr GetPs2FactorPwHwnd()
     {
-        IntPtr hWnd = GetWindowByClassAndTitle("JamShadowClass", ": ");
+        IntPtr hWnd = GetWindowByClassAndTitle(IntPtr.Zero, "JamShadowClass", ": ");
 
         return hWnd;
     }
@@ -349,7 +384,7 @@ Echo "Found Secret. Application is started successfully!"
 while($true)
 {
     # Get window Handle
-    $pulseHwnd = [Win32Api]::GetPs2FactorPwHwnd();
+    $pulseHwnd = [Win32Api]::GetWindowByClassAndTitle([IntPtr]::Zero, "JamShadowClass", ": ");
     #$enc = ([System.Text.Encoding]::GetEncoding("UTF-8")).GetString({0xe6, 0x8e, 0xa5, 0xe7});
     #Echo $enc
     #[Win32Api]::UTF8toUnicode("e68ea5e7b69ae58588")
@@ -363,7 +398,7 @@ while($true)
     Echo "Pulse Secure hWnd: $pulseHwnd"
 
     # Get Button
-    $btnHwnd = [Win32Api]::FindWindowEx($pulseHwnd, [IntPtr]::Zero, "JAM_BitmapButton");
+    $btnHwnd = [Win32Api]::GetChildHwnd($pulseHwnd, "JAM_BitmapButton", "(&C)");
 
     if ((!$btnHwnd) -or ($btnHwnd -eq 0))
     {
@@ -374,11 +409,19 @@ while($true)
 
     Echo "Btn hWnd: $btnHwnd"
 
-    $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
-    Echo "Now password: $password"
+    $twoFactorInput = [Win32Api]::GetChildHwnd($pulseHwnd, "ATL:0148A1E0", "");
+
+    Echo "Input hWnd: $twoFactorInput"
+
+    if ($twoFactorInput -and ($twoFactorInput -ne 0))
+    {
+        $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
+        Echo "Now password: $password"
     
-    [Win32Api]::SetForegroundWindow($pulseHwnd);
-    [System.Windows.Forms.SendKeys]::SendWait($password);
+        #[Win32Api]::SetForegroundWindow($pulseHwnd);
+        #[System.Windows.Forms.SendKeys]::SendWait($password);
+        [Win32Api]::SendMessage($twoFactorInput, 0x0102, 65, 0); # WM_KEYDOWN
+    }
 
     [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
     # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
