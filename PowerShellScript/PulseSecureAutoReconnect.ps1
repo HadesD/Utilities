@@ -130,6 +130,8 @@ public static class Win32Api
 {
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, StringBuilder lParam);
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern IntPtr PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, StringBuilder lParam);
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
@@ -144,14 +146,18 @@ public static class Win32Api
     [DllImport("User32.dll")]
     public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
     [DllImport("User32.dll")]
+    public static extern int SetWindowText(IntPtr hWnd, string lpString);
+    [DllImport("User32.dll")]
     public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
 
     public static IntPtr GetWindowByClassAndTitle(IntPtr parentHwnd, string windowClassName, string windowTitle)
     {
         Console.WriteLine(windowTitle);
         StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
         StringBuilder windowText = new StringBuilder(50);
-        IntPtr hWnd = GetWindow(GetForegroundWindow(), GW_HWNDFIRST);
+        IntPtr hWnd = GetWindow(GetForegroundWindow(), 0); // GW_HWNDFIRST
 
         while (hWnd != IntPtr.Zero)
         {
@@ -159,7 +165,7 @@ public static class Win32Api
             if (classText.ToString() == windowClassName)
             {
                 GetWindowText(hWnd, windowText, 50);
-                Console.WriteLine(windowText);
+                // Console.WriteLine(windowText);
                 string _wndTxt = windowText.ToString();
                 // Console.WriteLine(_wndTxt);
                 if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
@@ -169,13 +175,13 @@ public static class Win32Api
                 }
             }
 
-            hWnd = GetWindow(hWnd, GW_HWNDNEXT);
+            hWnd = GetWindow(hWnd, 2); // GW_HWNDNEXT
         }
 
         return hWnd;
     }
 
-    public static IntPtr GetChildHwnd(IntPtr hWndParent, string windowClassName, string windowTitle, bool isExact = false)
+    public static IntPtr GetChildHwnd(IntPtr hWndParent, string windowClassName, string windowTitle, uint windowStyle = 0, bool isExact = false)
     {
         StringBuilder classText = new StringBuilder(windowClassName.Length * 2);
         StringBuilder windowText = new StringBuilder(50);
@@ -185,25 +191,48 @@ public static class Win32Api
         while (hWnd != IntPtr.Zero)
         {
             GetClassName(hWnd, classText, windowClassName.Length * 2);
+            // Console.WriteLine(classText);
 
             if (classText.ToString() == windowClassName)
             {
                 GetWindowText(hWnd, windowText, 50);
                 string _wndTxt = windowText.ToString();
-                Console.WriteLine(_wndTxt);
+                // Console.WriteLine(_wndTxt);
                 if (isExact)
                 {
+                    Console.WriteLine(_wndTxt);
+                    Console.WriteLine(windowTitle);
                     if (_wndTxt == windowTitle)
+                    {
+                        if (windowStyle == 0)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            uint _wndStyle = (uint)GetWindowLong(hWnd, -16);
+                            Console.WriteLine(_wndStyle);
+                            if (_wndStyle == windowStyle)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
+                {
+                    if (windowStyle == 0)
                     {
                         break;
                     }
-                }
-                else
-                {
-                    if (_wndTxt.Contains(windowTitle) || windowTitle.Contains(_wndTxt))
+                    else
                     {
-                        // Console.WriteLine("Found hWnd");
-                        break;
+                        uint _wndStyle = (uint)GetWindowLong(hWnd, -16);
+                        Console.WriteLine(_wndStyle);
+                        if (_wndStyle == windowStyle)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -327,7 +356,7 @@ while($true)
     Echo "Pulse Secure hWnd: $pulseHwnd"
 
     # Get Button
-    $btnHwnd = [Win32Api]::GetChildHwnd($pulseHwnd, "JAM_BitmapButton", "(&C)");
+    $btnHwnd = [Win32Api]::GetChildHwnd($pulseHwnd, "JAM_BitmapButton", "(&C)", 0, $false);
 
     if ((!$btnHwnd) -or ($btnHwnd -eq 0))
     {
@@ -338,21 +367,28 @@ while($true)
 
     Echo "Btn hWnd: $btnHwnd"
 
-    $twoFactorInput = [Win32Api]::GetChildHwnd($pulseHwnd, "ATL:0148A1E0", "", $true);
-
-    Echo "Input hWnd: $twoFactorInput"
+    Echo [int](0x500100A0)
+    $twoFactorInput = [Win32Api]::GetChildHwnd($pulseHwnd, "ATL:00FEA1E0", "", 0x500100A0, $true);
 
     if ($twoFactorInput -and ($twoFactorInput -ne 0))
     {
+        Echo "Input hWnd: $twoFactorInput"
         $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
         Echo "Now password: $password"
     
         #[Win32Api]::SetForegroundWindow($pulseHwnd);
         #[System.Windows.Forms.SendKeys]::SendWait($password);
-        [Win32Api]::SendMessage($twoFactorInput, 0x0102, 65, 0); # WM_KEYDOWN
+        ForEach ($c in [char[]]$password)
+        {
+            #[char]$c;
+            #[Win32Api]::SendMessage($twoFactorInput, 0x0100, 65, 0); # WM_KEYDOWN
+            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
+            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
+        }
+        [Win32Api]::SetWindowText($twoFactorInput, $password);
     }
 
-    [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
+    # [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
     # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
 
     sleep -Milliseconds 2000
