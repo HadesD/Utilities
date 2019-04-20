@@ -146,6 +146,8 @@ public static class Win32Api
     public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")]
+    public static extern int ShowWindow(IntPtr hwnd, int nCmdShow);
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass = null, string lpszWindow = null);
@@ -435,9 +437,10 @@ while($true)
     Try
     {
         $curHWnd = [Win32Api]::GetForegroundWindow();
+
         # Get window Handle
         $pulseHwnd = GetWindowByClassAndTitle -windowClassName "JamShadowClass" -windowTitle "Connect to: ", ": ";
-        If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
+        If (!$pulseHwnd -or ($pulseHwnd -eq 0) -or ($pulseHwnd -eq [IntPtr]::Zero))
         {
             Sleep -Seconds 5
             continue;
@@ -466,12 +469,13 @@ while($true)
 
         $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
 
-        if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
+        if ($twoFactorInput -and ($twoFactorInput -ne 0) -and ($twoFactorInput -ne [IntPtr]::Zero))
         {
             Write-Host "[+] Input hWnd: 0x$($twoFactorInput.ToString("x8"))=$twoFactorInput"
             $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
             Write-Host "[+] Now password: $password"
     
+            [void][Win32Api]::ShowWindow($pulseHwnd, 9);
             [void][Win32Api]::SetForegroundWindow($pulseHwnd);
             if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
             {
@@ -483,6 +487,14 @@ while($true)
                 Write-Warning "[x] Can not SetForegroundWindow($pulseHwnd)"
                 Sleep -Seconds 1
                 continue;
+            }
+        }
+        else
+        {
+            $unameInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:" -windowTitles "" -windowStyle 0x58010080 -isExact $false;
+            if ($unameInput -eq [IntPtr]::Zero)
+            {
+                [void][Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
             }
         }
 
