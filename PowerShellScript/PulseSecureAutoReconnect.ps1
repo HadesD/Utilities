@@ -425,11 +425,12 @@ if (-not($sharedSecret))
 
 Write-Host "# Found Secret. Application is started successfully!"
 Write-Host "# You can click [Minimize] to hide this window then back to your work now."
-Write-Warning "DO NOT CLOSE THIS WINDOW."
 Write-Host @"
 #                                                                      #
 ========================================================================
+
 "@
+Write-Warning "DO NOT CLOSE THIS WINDOW."
 
 # Processing
 while($true)
