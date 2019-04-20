@@ -197,10 +197,10 @@ function GetWindowByClassAndTitle
         $hWnd = [Win32Api]::GetWindow([Win32Api]::GetForegroundWindow(), 0); # GW_HWNDFIRST
         while ($hWnd -ne [IntPtr]::Zero)
         {
-            $_ = [Win32Api]::GetClassName($hWnd, $classText, $windowClassName.Length * 2);
+            [void][Win32Api]::GetClassName($hWnd, $classText, $windowClassName.Length * 2);
             if ($classText.ToString() -eq $windowClassName)
             {
-                $_ = [Win32Api]::GetWindowText($hWnd, $windowText, 50);
+                [void][Win32Api]::GetWindowText($hWnd, $windowText, 50);
                 $_wndTxt = $windowText.ToString();
                 $found = $false;
                 foreach ($windowTitle in $windowTitles)
@@ -266,7 +266,7 @@ function GetChildHwnd
 
             while ($hWnd -ne [IntPtr]::Zero)
             {
-                $_ = [Win32Api]::GetClassName($hWnd, $classText, $windowClassName.Length * 2);
+                [void][Win32Api]::GetClassName($hWnd, $classText, $windowClassName.Length * 2);
             
                 if ($classText.ToString() -eq $windowClassName)
                 {
@@ -472,10 +472,10 @@ while($true)
             $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
             Echo "Now password: $password"
     
-            $_ = [Win32Api]::SetForegroundWindow($pulseHwnd);
+            [void][Win32Api]::SetForegroundWindow($pulseHwnd);
             if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
             {
-                $_ = [System.Windows.Forms.SendKeys]::SendWait($password);
+                [void][System.Windows.Forms.SendKeys]::SendWait($password);
             }
             else
             {
@@ -483,9 +483,8 @@ while($true)
             }
         }
 
-        #$_ = [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
-        # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
-        $_ = [Win32Api]::SetForegroundWindow($curHWnd);
+        [void][Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
+        [void][Win32Api]::SetForegroundWindow($curHWnd);
     }
     Catch
     {
