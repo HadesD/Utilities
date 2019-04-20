@@ -136,7 +136,7 @@ public static class Win32Api
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")]
-    public static extern IntPtr SetForegroundWindow(IntPtr hWnd);
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass = null, string lpszWindow = null);
@@ -425,6 +425,7 @@ Echo "Found Secret. Application is started successfully!"
 # Processing
 while($true)
 {
+    $curHWnd = [Win32Api]::GetForegroundWindow();
     # Get window Handle
     $pulseHwnd = GetWindowByClassAndTitle -windowClassName "JamShadowClass" -windowTitle "Connect to: ", ": ";
     If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
@@ -438,9 +439,9 @@ while($true)
     # Get Button
     $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry" -windowStyle 0 -isExact $false;
 
-    if ((!$btnHwnd) -or ($btnHwnd -eq 0))
+    if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
     {
-        Echo "Not found submit button"
+        Echo "Pulse Secure is submitting or not found Submit button"
         Sleep -Seconds 2
         continue;
     }
@@ -449,7 +450,7 @@ while($true)
 
     $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
 
-    if ($twoFactorInput -and ($twoFactorInput -ne 0))
+    if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
     {
         Echo "Input hWnd: 0x$($twoFactorInput.ToString("x8"))=$twoFactorInput"
         $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
@@ -464,20 +465,11 @@ while($true)
         {
             continue;
         }
-        #ForEach ($c in [char[]]$password)
-        #{
-            #[char]$c;
-            #[Win32Api]::SendMessage($pulseHwnd, 0x0100, 65, 0); # WM_KEYDOWN
-            #[Win32Api]::SendMessage($pulseHwnd, 0x0101, 65, 0); # WM_KEYDOWN
-            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
-            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
-        #}
-        #[Win32Api]::SendMessage($pulseHwnd, 0x000C, [IntPtr]::Zero, $password); # WM_SETTEXT
-        #[Win32Api]::SetWindowText($twoFactorInput, $password);
     }
 
-    [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
+    $_ = [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
     # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
+    $_ = [Win32Api]::SetForegroundWindow($curHWnd);
 
-    sleep -Milliseconds 2000
+    Sleep -Seconds 2
 }
