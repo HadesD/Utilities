@@ -8,7 +8,7 @@
         PowerShell.exe -noprofile -Sta -executionpolicy bypass -File PulseSecureAutoReconnect.ps1
 #>
 
-Echo "Starting..."
+Echo "[Pulse Secure] Auto Reconnect is starting..."
 # $OutputEncoding='utf-8'
 Add-Type -AssemblyName System.Web
 Add-Type -AssemblyName System.Windows.Forms
