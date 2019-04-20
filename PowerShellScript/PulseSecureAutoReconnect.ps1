@@ -2,13 +2,23 @@
     .SYNOPSIS
         Auto reconnect pulse secure when prompt appear.
     .IExpress Install Command:
-        PowerShell.exe -noprofile -Sta -executionpolicy bypass -File PulseSecureAutoReconnect.ps1
+        PowerShell.exe -NoProfile -WindowStyle Hidden -STA -ExecutionPolicy Bypass -File PulseSecureAutoReconnect.ps1
     .INSTALLATION:
         Copy PulseSecureAutoReconnect.EXE to
         C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 #>
 
-Echo "[Pulse Secure] Auto Reconnect is starting..."
+Write-Host @"
+
+========================================================================
+#                                                          [_] [O] [X] #
+========================================================================
+#                                                                      #
+# [Pulse Secure] Auto Reconnect                                        #
+#                                                                      #
+========================================================================
+
+"@
 
 # $OutputEncoding='utf-8'
 Add-Type -AssemblyName System.Web
@@ -416,7 +426,9 @@ if (-not($sharedSecret))
     exit;
 }
 
-Echo "Found Secret. Application is started successfully!"
+Write-Host "Found Secret. Application is started successfully!"
+Write-Host "You can click [Minimize] to hide this window then back to your work now."
+Write-Warning "DO NOT CLOSE THIS WINDOW."
 
 # Processing
 while($true)
