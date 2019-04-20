@@ -14,7 +14,7 @@ $Host.UI.RawUI.WindowTitle = "$appTitle | Version: $version"
 
 Write-Host @"
 ========================================================================
-#                                                                      #
+#
 # $($Host.UI.RawUI.WindowTitle)
 # This application will help you auto reconnect Pulse Secure VPN
 "@
@@ -430,7 +430,7 @@ if (-not($sharedSecret))
 Write-Host "# Found Secret. Application is started successfully!"
 Write-Host "# You can click [Minimize] to hide this window then back to your work now."
 Write-Host @"
-#                                                                      #
+#                                                                      
 ========================================================================
 
 "@
