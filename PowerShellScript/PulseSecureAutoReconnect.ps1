@@ -1,11 +1,12 @@
 <#
     .SYNOPSIS
         Auto reconnect pulse secure when prompt appear.
-    .INSTALLATION:
-        <Windows> + <r> (Run)
-        Input: powershell<Enter>
     .IExpress Install Command:
         PowerShell.exe -noprofile -Sta -executionpolicy bypass -File PulseSecureAutoReconnect.ps1
+    .INSTALLATION:
+        <Windows> + <r> (Run)
+        Input: C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+        Copy PulseSecureAutoReconnect.EXE to shown Explorer
 #>
 
 Echo "[Pulse Secure] Auto Reconnect is starting..."
@@ -258,7 +259,7 @@ function GetChildHwnd
                     {
                         if ($isExact)
                         {
-                            # Write-Host FFF $windowClassName $windowTitle TXT $_wndTxt
+                            Write-Host FFF $windowClassName $windowTitle TXT $_wndTxt
                             if ($_wndTxt -eq $windowTitle)
                             {
                                 if ($windowStyle -eq [IntPtr]::Zero)
@@ -434,18 +435,25 @@ while($true)
         Echo "Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
 
         # Get Button
-        $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry";
+        $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect";
 
         if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
         {
-            Echo "Pulse Secure is submitting or not found Submit button"
+            $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "Retry";
+            if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
+            {
+                Echo "Pulse Secure is submitting or not found Submit button"
+                Sleep -Seconds 2
+                continue;
+            }
+            [void][Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
             Sleep -Seconds 2
             continue;
         }
 
         Echo "Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
 
-        $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
+        $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0", "ATL:00EAA1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
 
         if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
         {
@@ -457,6 +465,7 @@ while($true)
             if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
             {
                 [void][System.Windows.Forms.SendKeys]::SendWait($password);
+                [void][Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
             }
             else
             {
@@ -464,7 +473,6 @@ while($true)
             }
         }
 
-        [void][Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
         [void][Win32Api]::SetForegroundWindow($curHWnd);
     }
     Catch
