@@ -9,6 +9,7 @@
 #>
 
 Echo "[Pulse Secure] Auto Reconnect is starting..."
+
 # $OutputEncoding='utf-8'
 Add-Type -AssemblyName System.Web
 Add-Type -AssemblyName System.Windows.Forms
@@ -468,6 +469,8 @@ while($true)
             }
             else
             {
+                Echo "Can not SetForegroundWindow($pulseHwnd)"
+                Sleep -Seconds 1
                 continue;
             }
         }
