@@ -2,22 +2,17 @@
     .SYNOPSIS
         Auto reconnect pulse secure when prompt appear.
     .IExpress Install Command:
-        PowerShell.exe -NoProfile -WindowStyle Hidden -STA -ExecutionPolicy Bypass -File PulseSecureAutoReconnect.ps1
+        PowerShell.exe -NoProfile -STA -ExecutionPolicy Bypass -File PulseSecureAutoReconnect.ps1
     .INSTALLATION:
         Copy PulseSecureAutoReconnect.EXE to
         C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 #>
 
 Write-Host @"
-
 ========================================================================
-#                                                          [_] [O] [X] #
+# [Pulse Secure] Auto Reconnect                            [_] [O] [X] #
 ========================================================================
 #                                                                      #
-# [Pulse Secure] Auto Reconnect                                        #
-#                                                                      #
-========================================================================
-
 "@
 
 # $OutputEncoding='utf-8'
@@ -331,8 +326,8 @@ function GetChildHwnd
 
 if (-not([System.Management.Automation.PSTypeName]('Win32Api')).Type)
 {
-    Echo "Script is corrupted. Not found Win32Api type.";
-    Echo "Please check script or contact the Author 's team";
+    Write-Warning "[x] Script is corrupted. Not found Win32Api type.";
+    Write-Warning "[x] Please check script or contact the Author 's team";
     exit;
 }
 
@@ -346,7 +341,7 @@ function InputOtpAuthText
         Echo '' | Out-File -FilePath $otpAuthFilePath -Force -NoNewline;
     }
 
-    Write-Host "Please input your OtpAuth RawText in prompted window!"
+    Write-Host "[*] Please input your OtpAuth RawText in prompted window!"
     $otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox(
         "Please enter OtpAuth raw text."+[char](13)+[char](10)+[char](13)+[char](10)+"You can get it from decoded QR-Code image",
         "Pulse Secure Auto Reconnect OtpAuth",
@@ -354,12 +349,12 @@ function InputOtpAuthText
     ) | foreach { $_.trim() }
     if ([System.String]::IsNullOrEmpty($otpAuthText -as [string]))
     {
-        Write-Warning 'Input form was closed by user!';
+        Write-Warning "[x] Input form was closed by user!";
         exit;
     }
 
     Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline;
-    Write-Host "Saved AuthRawText!";
+    Write-Host "[+] Saved AuthRawText!";
 }
 
 function GetSecret
@@ -379,21 +374,21 @@ function GetSecret
 
     if (!$url_parse)
     {
-        Write-Warning "Can not parse OtpUri";
+        Write-Warning "[x] Can not parse OtpUri";
         return $null;
     }
 
     $query = $url_parse.Query;
     if (!$query)
     {
-        Write-Warning "Can not get Query from input Uri";
+        Write-Warning "[x] Can not get Query from input Uri";
         return $null;
     }
 
     $queries = [System.Web.HttpUtility]::ParseQueryString($query);
     if (!$queries)
     {
-        Write-Warning "Can not get Array from Query";
+        Write-Warning "[x] Can not get Array from Query";
         return $null;
     }
 
@@ -422,13 +417,17 @@ while (!$sharedSecret)
 
 if (-not($sharedSecret))
 {
-    Write-Warning "Not found secret"
+    Write-Warning "[x] Not found secret"
     exit;
 }
 
-Write-Host "Found Secret. Application is started successfully!"
-Write-Host "You can click [Minimize] to hide this window then back to your work now."
+Write-Host "# Found Secret. Application is started successfully!"
+Write-Host "# You can click [Minimize] to hide this window then back to your work now."
 Write-Warning "DO NOT CLOSE THIS WINDOW."
+Write-Host @"
+#                                                                      #
+========================================================================
+"@
 
 # Processing
 while($true)
@@ -444,7 +443,7 @@ while($true)
             continue;
         }
 
-        Echo "Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
+        Write-Host "[+] Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
 
         # Get Button
         $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect";
@@ -454,7 +453,7 @@ while($true)
             $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "Retry";
             if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
             {
-                Echo "Pulse Secure is submitting or not found Submit button"
+                Write-Host "[+] Pulse Secure is submitting or not found Submit button"
                 Sleep -Seconds 2
                 continue;
             }
@@ -463,15 +462,15 @@ while($true)
             continue;
         }
 
-        Echo "Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
+        Write-Host "[+] Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
 
         $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
 
         if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
         {
-            Echo "Input hWnd: 0x$($twoFactorInput.ToString("x8"))=$twoFactorInput"
+            Write-Host "[+] Input hWnd: 0x$($twoFactorInput.ToString("x8"))=$twoFactorInput"
             $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
-            Echo "Now password: $password"
+            Write-Host "[+] Now password: $password"
     
             [void][Win32Api]::SetForegroundWindow($pulseHwnd);
             if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
@@ -481,7 +480,7 @@ while($true)
             }
             else
             {
-                Echo "Can not SetForegroundWindow($pulseHwnd)"
+                Write-Warning "[x] Can not SetForegroundWindow($pulseHwnd)"
                 Sleep -Seconds 1
                 continue;
             }
