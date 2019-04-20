@@ -8,14 +8,14 @@
         C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 #>
 
+$version = "0.9.5";
+$Host.UI.RawUI.WindowTitle = "[Pulse Secure] Auto Reconnect | Version: $version"
+
 Write-Host @"
-========================================================================
-# [Pulse Secure] Auto Reconnect                            [_] [O] [X] #
 ========================================================================
 #                                                                      #
 "@
 
-# $OutputEncoding='utf-8'
 Add-Type -AssemblyName System.Web
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName Microsoft.VisualBasic
