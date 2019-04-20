@@ -4,12 +4,15 @@
     .INSTALLATION:
         <Windows> + <r> (Run)
         Input: powershell<Enter>
-
+    .IExpress Install Command:
+        PowerShell.exe -noprofile -Sta -executionpolicy bypass -File PulseSecureAutoReconnect.ps1
 #>
 
 Echo "Starting..."
 # $OutputEncoding='utf-8'
 Add-Type -AssemblyName System.Web
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName Microsoft.VisualBasic
 
 function Convert-Base32ToByte
 {
@@ -173,18 +176,15 @@ public static class Win32Api
 }
 "@
 
-# IntPtr parentHwnd, string windowClassName, string[] windowTitle
 function GetWindowByClassAndTitle
 {
     [CmdletBinding()]
     param
     (
-        # The date and time for the target calculation, default is now (UTC).
         [Parameter(Mandatory = $true)]
         [System.String]
         $windowClassName,
 
-        # Token length of the one-time password, default is 6 characters.
         [Parameter(Mandatory = $true)]
         [System.String[]]
         $windowTitles
@@ -201,9 +201,7 @@ function GetWindowByClassAndTitle
             if ($classText.ToString() -eq $windowClassName)
             {
                 $_ = [Win32Api]::GetWindowText($hWnd, $windowText, 50);
-                # Console.WriteLine(windowText);
                 $_wndTxt = $windowText.ToString();
-                # Console.WriteLine(_wndTxt);
                 $found = $false;
                 foreach ($windowTitle in $windowTitles)
                 {
@@ -228,7 +226,6 @@ function GetWindowByClassAndTitle
     }
 }
 
-# IntPtr hWndParent, string windowClassName, string[] windowTitle, uint windowStyle = 0, bool isExact = false
 function GetChildHwnd
 {
     [CmdletBinding()]
@@ -292,7 +289,6 @@ function GetChildHwnd
                                 else
                                 {
                                     $_wndStyle = [Win32Api]::GetWindowLong($hWnd, -16);
-                                    Write-Host "Style $($hWnd.ToString("x8")) $($_wndStyle.ToString("x8")) $($windowStyle.ToString("x8"))"
                                     if ($_wndStyle -eq $windowStyle)
                                     {
                                         $foundWndClass = $true;
@@ -324,7 +320,6 @@ function GetChildHwnd
                     }
                     if ($found)
                     {
-                        Write-Host Break
                         break;
                     }
                 }
@@ -334,7 +329,6 @@ function GetChildHwnd
             }
             if ($foundWndClass)
             {
-                Write-Host Break
                 break;
             }
         }
@@ -356,19 +350,26 @@ function InputOtpAuthText
 {
     if (![System.IO.File]::Exists($otpAuthFilePath))
     {
-        Write-Host "Creating $otpAuthFilePath"
-        Echo '' | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
+        Write-Host "Creating $otpAuthFilePath";
+        Echo '' | Out-File -FilePath $otpAuthFilePath -Force -NoNewline;
     }
 
     Write-Host "Please input your OtpAuth RawText in prompted window!"
-    $otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox("Enter OtpAuth RawText:", "OtpAuth", [IO.File]::ReadAllText($otpAuthFilePath)) | foreach { $_.trim() }
-    if ([String]::IsNullOrEmpty($otpAuthText))
+    $otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox(
+        "Please enter OtpAuth raw text."+[char](13)+[char](10)+[char](13)+[char](10)+"You can get it from decoded QR-Code image",
+        "Pulse Secure Auto Reconnect OtpAuth",
+        [IO.File]::ReadAllText($otpAuthFilePath)
+    ) | foreach { $_.trim() }
+    if ([System.String]::IsNullOrEmpty($otpAuthText -as [string]))
     {
-        exit
+        Write-Warning 'Input form was closed by user!';
+        exit;
     }
 
-    Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline
-    Write-Host "Saved AuthRawText!"
+    Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline;
+    Write-Host "Saved AuthRawText!";
+
+    return $otpAuthText;
 }
 
 function GetSecret
@@ -412,12 +413,27 @@ function GetSecret
 $sharedSecret = $null;
 while (!$sharedSecret)
 {
-    $sharedSecret = GetSecret;
-    # Echo "Secret: $sharedSecret"
-    If (!$sharedSecret)
+    Try
     {
-        InputOtpAuthText;
+        $sharedSecret = GetSecret;
+        # Echo "Secret: $sharedSecret"
+        If (!$sharedSecret)
+        {
+            InputOtpAuthText;
+        }
     }
+    Catch
+    {
+        Write-Warning $_.Exception.GetType().FullName
+        Write-Warning $_.Exception.Message
+        break
+    }
+}
+
+if (-not($sharedSecret))
+{
+    Write-Warning "Not found secret"
+    exit;
 }
 
 Echo "Found Secret. Application is started successfully!"
@@ -425,51 +441,59 @@ Echo "Found Secret. Application is started successfully!"
 # Processing
 while($true)
 {
-    $curHWnd = [Win32Api]::GetForegroundWindow();
-    # Get window Handle
-    $pulseHwnd = GetWindowByClassAndTitle -windowClassName "JamShadowClass" -windowTitle "Connect to: ", ": ";
-    If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
+    Try
     {
-        Sleep -Seconds 5
-        continue;
-    }
-
-    Echo "Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
-
-    # Get Button
-    $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry" -windowStyle 0 -isExact $false;
-
-    if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
-    {
-        Echo "Pulse Secure is submitting or not found Submit button"
-        Sleep -Seconds 2
-        continue;
-    }
-
-    Echo "Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
-
-    $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
-
-    if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
-    {
-        Echo "Input hWnd: 0x$($twoFactorInput.ToString("x8"))=$twoFactorInput"
-        $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
-        Echo "Now password: $password"
-    
-        $_ = [Win32Api]::SetForegroundWindow($pulseHwnd);
-        if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
+        $curHWnd = [Win32Api]::GetForegroundWindow();
+        # Get window Handle
+        $pulseHwnd = GetWindowByClassAndTitle -windowClassName "JamShadowClass" -windowTitle "Connect to: ", ": ";
+        If ((!$pulseHwnd) -or ($pulseHwnd -eq 0))
         {
-            $_ = [System.Windows.Forms.SendKeys]::SendWait($password);
-        }
-        else
-        {
+            Sleep -Seconds 5
             continue;
         }
-    }
 
-    $_ = [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
-    # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
-    $_ = [Win32Api]::SetForegroundWindow($curHWnd);
+        Echo "Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
+
+        # Get Button
+        $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry" -windowStyle 0 -isExact $false;
+
+        if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
+        {
+            Echo "Pulse Secure is submitting or not found Submit button"
+            Sleep -Seconds 2
+            continue;
+        }
+
+        Echo "Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
+
+        $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
+
+        if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
+        {
+            Echo "Input hWnd: 0x$($twoFactorInput.ToString("x8"))=$twoFactorInput"
+            $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
+            Echo "Now password: $password"
+    
+            $_ = [Win32Api]::SetForegroundWindow($pulseHwnd);
+            if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
+            {
+                $_ = [System.Windows.Forms.SendKeys]::SendWait($password);
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        #$_ = [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
+        # [System.Windows.Forms.SendKeys]::SendWait("{ENTER}");
+        $_ = [Win32Api]::SetForegroundWindow($curHWnd);
+    }
+    Catch
+    {
+        Write-Warning $_.Exception.GetType().FullName
+        Write-Warning $_.Exception.Message
+    }
 
     Sleep -Seconds 2
 }
