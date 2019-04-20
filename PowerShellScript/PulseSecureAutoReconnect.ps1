@@ -337,7 +337,7 @@ function GetChildHwnd
     }
 }
 
-if (-not ([System.Management.Automation.PSTypeName]'Win32Api').Type)
+if (-not([System.Management.Automation.PSTypeName]('Win32Api')).Type)
 {
     Echo "Script is corrupted. Not found Win32Api type.";
     Echo "Please check script or contact the Author 's team";
