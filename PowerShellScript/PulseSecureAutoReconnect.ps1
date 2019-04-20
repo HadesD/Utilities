@@ -4,9 +4,8 @@
     .IExpress Install Command:
         PowerShell.exe -noprofile -Sta -executionpolicy bypass -File PulseSecureAutoReconnect.ps1
     .INSTALLATION:
-        <Windows> + <r> (Run)
-        Input: C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
-        Copy PulseSecureAutoReconnect.EXE to shown Explorer
+        Copy PulseSecureAutoReconnect.EXE to
+        C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 #>
 
 Echo "[Pulse Secure] Auto Reconnect is starting..."
@@ -179,7 +178,7 @@ function GetWindowByClassAndTitle
         $hWnd = [Win32Api]::GetWindow([Win32Api]::GetForegroundWindow(), 0); # GW_HWNDFIRST
         while ($hWnd -ne [IntPtr]::Zero)
         {
-            [void][Win32Api]::GetClassName($hWnd, $classText, $windowClassName.Length * 2);
+            [void][Win32Api]::GetClassName($hWnd, $classText, 50);
             if ($classText.ToString() -eq $windowClassName)
             {
                 [void][Win32Api]::GetWindowText($hWnd, $windowText, 50);
@@ -248,9 +247,9 @@ function GetChildHwnd
 
             while ($hWnd -ne [IntPtr]::Zero)
             {
-                [void][Win32Api]::GetClassName($hWnd, $classText, $windowClassName.Length * 2);
+                [void][Win32Api]::GetClassName($hWnd, $classText, 50);
             
-                if ($classText.ToString() -eq $windowClassName)
+                if ($classText.ToString().Contains($windowClassName))
                 {
                     $_ = [Win32Api]::GetWindowText($hWnd, $windowText, 50);
                     $_wndTxt = $windowText.ToString();
@@ -259,7 +258,7 @@ function GetChildHwnd
                     {
                         if ($isExact)
                         {
-                            Write-Host FFF $windowClassName $windowTitle TXT $_wndTxt
+                            # Write-Host FFF $windowClassName $windowTitle TXT $_wndTxt
                             if ($_wndTxt -eq $windowTitle)
                             {
                                 if ($windowStyle -eq [IntPtr]::Zero)
@@ -453,7 +452,7 @@ while($true)
 
         Echo "Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
 
-        $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0", "ATL:00EAA1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
+        $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
 
         if ($twoFactorInput -and ($twoFactorInput -ne 0) -or ($twoFactorInput -ne [IntPtr]::Zero))
         {
