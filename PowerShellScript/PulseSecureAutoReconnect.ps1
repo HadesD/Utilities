@@ -2,18 +2,21 @@
     .SYNOPSIS
         Auto reconnect pulse secure when prompt appear.
     .IExpress Install Command:
-        PowerShell.exe -NoProfile -STA -ExecutionPolicy Bypass -File PulseSecureAutoReconnect.ps1
+        PowerShell.exe -NoProfile -WindowStyle Minimized -STA -ExecutionPolicy Bypass -File PulseSecureAutoReconnect.ps1
     .INSTALLATION:
         Copy PulseSecureAutoReconnect.EXE to
         C:\Users\%UserName%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 #>
 
 $version = "0.9.5";
-$Host.UI.RawUI.WindowTitle = "[Pulse Secure] Auto Reconnect | Version: $version"
+$appTitle = "[Pulse Secure] Auto Reconnect";
+$Host.UI.RawUI.WindowTitle = "$appTitle | Version: $version"
 
 Write-Host @"
 ========================================================================
 #                                                                      #
+# $($Host.UI.RawUI.WindowTitle)
+# This application will help you auto reconnect Pulse Secure VPN
 "@
 
 Add-Type -AssemblyName System.Web
@@ -346,7 +349,7 @@ function InputOtpAuthText
     Write-Host "[*] Please input your OtpAuth RawText in prompted window!"
     $otpAuthText = [Microsoft.VisualBasic.Interaction]::InputBox(
         "Please enter OtpAuth raw text."+[char](13)+[char](10)+[char](13)+[char](10)+"You can get it from decoded QR-Code image",
-        "Pulse Secure Auto Reconnect OtpAuth",
+        "$appTitle | OtpAuth",
         [IO.File]::ReadAllText($otpAuthFilePath)
     ) | foreach { $_.trim() }
     if ([System.String]::IsNullOrEmpty($otpAuthText -as [string]))
@@ -397,6 +400,7 @@ function GetSecret
     return $queries['secret'];
 }
 
+# Check and set secret
 $sharedSecret = $null;
 while (!$sharedSecret)
 {
@@ -432,6 +436,8 @@ Write-Host @"
 "@
 Write-Warning "DO NOT CLOSE THIS WINDOW."
 
+# [void][System.Windows.Forms.Messagebox]::Show("Application run successfully!", $appTitle, [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Asterisk)
+
 # Processing
 while($true)
 {
@@ -454,7 +460,7 @@ while($true)
 
         if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
         {
-            $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "Retry";
+            $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "Retry", "Extend";
             if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
             {
                 Write-Host "[+] Pulse Secure is submitting or not found Submit button"
