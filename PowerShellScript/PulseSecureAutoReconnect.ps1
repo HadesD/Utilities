@@ -129,12 +129,14 @@ using System.Text;
 public static class Win32Api
 {
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, int wParam, StringBuilder lParam);
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
-    public static extern IntPtr PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, StringBuilder lParam);
+    public static extern IntPtr PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
 
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass = null, string lpszWindow = null);
@@ -278,6 +280,7 @@ function GetChildHwnd
                     {
                         if ($isExact)
                         {
+                            # Write-Host FFF $windowClassName $windowTitle TXT $_wndTxt
                             if ($_wndTxt -eq $windowTitle)
                             {
                                 if ($windowStyle -eq [IntPtr]::Zero)
@@ -289,7 +292,7 @@ function GetChildHwnd
                                 else
                                 {
                                     $_wndStyle = [Win32Api]::GetWindowLong($hWnd, -16);
-                                    Write-Host "Style $($_wndStyle.ToString("x8")) $($windowStyle.ToString("x8"))"
+                                    Write-Host "Style $($hWnd.ToString("x8")) $($_wndStyle.ToString("x8")) $($windowStyle.ToString("x8"))"
                                     if ($_wndStyle -eq $windowStyle)
                                     {
                                         $foundWndClass = $true;
@@ -319,9 +322,9 @@ function GetChildHwnd
                             }
                         }
                     }
-                    Write-Host $found
                     if ($found)
                     {
+                        Write-Host Break
                         break;
                     }
                 }
@@ -331,6 +334,7 @@ function GetChildHwnd
             }
             if ($foundWndClass)
             {
+                Write-Host Break
                 break;
             }
         }
@@ -432,7 +436,7 @@ while($true)
     Echo "Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
 
     # Get Button
-    $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitle "(&C)", "Connect", "Retry" -windowStyle 0 -isExact $false;
+    $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry" -windowStyle 0 -isExact $false;
 
     if ((!$btnHwnd) -or ($btnHwnd -eq 0))
     {
@@ -443,7 +447,7 @@ while($true)
 
     Echo "Btn hWnd: 0x$($btnHwnd.ToString("x8"))=$btnHwnd"
 
-    $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "ATL:00FEA1E0", "ATL:00D7A1E0" -windowTitle "" -windowStyle 0x500100A0 -isExact $true;
+    $twoFactorInput = GetChildHwnd -hWndParent $pulseHwnd -windowClassNames "ATL:00FEA1E0", "ATL:00D7A1E0" -windowTitles "" -windowStyle 0x500100A0 -isExact $true;
 
     if ($twoFactorInput -and ($twoFactorInput -ne 0))
     {
@@ -451,16 +455,25 @@ while($true)
         $password = Get-TimeBasedOneTimePassword -SharedSecret $sharedSecret
         Echo "Now password: $password"
     
-        #[Win32Api]::SetForegroundWindow($pulseHwnd);
-        #[System.Windows.Forms.SendKeys]::SendWait($password);
-        ForEach ($c in [char[]]$password)
+        $_ = [Win32Api]::SetForegroundWindow($pulseHwnd);
+        if ([Win32Api]::GetForegroundWindow() -eq $pulseHwnd)
         {
-            #[char]$c;
-            [Win32Api]::SendMessage($twoFactorInput, 0x0100, 65, 0); # WM_KEYDOWN
-            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
-            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
+            $_ = [System.Windows.Forms.SendKeys]::SendWait($password);
         }
-        [Win32Api]::SetWindowText($twoFactorInput, $password);
+        else
+        {
+            continue;
+        }
+        #ForEach ($c in [char[]]$password)
+        #{
+            #[char]$c;
+            #[Win32Api]::SendMessage($pulseHwnd, 0x0100, 65, 0); # WM_KEYDOWN
+            #[Win32Api]::SendMessage($pulseHwnd, 0x0101, 65, 0); # WM_KEYDOWN
+            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
+            #[Win32Api]::SendMessage($twoFactorInput, 0x0101, 65, 0); # WM_KEYUP
+        #}
+        #[Win32Api]::SendMessage($pulseHwnd, 0x000C, [IntPtr]::Zero, $password); # WM_SETTEXT
+        #[Win32Api]::SetWindowText($twoFactorInput, $password);
     }
 
     [Win32Api]::SendMessage($btnHwnd, 0x00F5, 0, 0); # BM_CLICK
