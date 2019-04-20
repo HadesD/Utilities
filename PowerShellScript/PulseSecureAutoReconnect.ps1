@@ -368,8 +368,6 @@ function InputOtpAuthText
 
     Echo $otpAuthText | Out-File -FilePath $otpAuthFilePath -Force -NoNewline;
     Write-Host "Saved AuthRawText!";
-
-    return $otpAuthText;
 }
 
 function GetSecret
@@ -424,9 +422,9 @@ while (!$sharedSecret)
     }
     Catch
     {
-        Write-Warning $_.Exception.GetType().FullName
-        Write-Warning $_.Exception.Message
-        break
+        Write-Warning $_.Exception.GetType().FullName;
+        Write-Warning $_.Exception.Message;
+        break;
     }
 }
 
