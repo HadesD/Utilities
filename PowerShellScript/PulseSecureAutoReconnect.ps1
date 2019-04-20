@@ -152,27 +152,8 @@ public static class Win32Api
     public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
     [DllImport("User32.dll")]
     public static extern int SetWindowText(IntPtr hWnd, string lpString);
-    [DllImport("User32.dll")]
-    public static extern bool IsChild(IntPtr hWndParent, IntPtr hWnd);
     [DllImport("user32.dll")]
     public static extern IntPtr GetWindowLong(IntPtr hWnd, int nIndex);
-
-    public static string UTF8toUnicode(string str)
-    {
-        byte[] bytUTF8;
-
-        byte[] bytUnicode;
-
-        string strUnicode = String.Empty;
-
-        bytUTF8 = Encoding.UTF8.GetBytes(str);
-
-        bytUnicode = Encoding.Convert(Encoding.UTF8, Encoding.Unicode, bytUTF8);
-
-        strUnicode = Encoding.Unicode.GetString(bytUnicode);
-
-        return strUnicode;
-    }
 }
 "@
 
@@ -453,7 +434,7 @@ while($true)
         Echo "Pulse Secure hWnd: 0x$($pulseHwnd.ToString("x8"))=$pulseHwnd"
 
         # Get Button
-        $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry" -windowStyle 0 -isExact $false;
+        $btnHwnd = GetChildHwnd -hWndParent $pulseHwnd -windowClassName "JAM_BitmapButton" -windowTitles "(&C)", "&Connect", "Retry";
 
         if (!$btnHwnd -or ($btnHwnd -eq 0) -or ($btnHwnd -eq [IntPtr]::Zero))
         {
