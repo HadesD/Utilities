@@ -13,6 +13,7 @@
 
 ## Util Tools:
 - https://github.com/vmi/cocot | Cocot - Page code convert (Useful for EUC-JP or Old page code)
+- https://docs.microsoft.com/en-us/sysinternals/downloads/strings | Get all strings from exe/binary files
 
 ## C++
 - Print current Preprocessor: ` gcc -mwin32 -dM -E -x c /dev/null | grep "WIN"`
