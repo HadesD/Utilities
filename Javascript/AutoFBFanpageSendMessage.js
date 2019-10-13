@@ -5,7 +5,7 @@ if (!list_view)
 	throw "err";
 }
 
-console.log(list_view);
+// console.log(list_view);
 
 function getAllMsgThread()
 {
@@ -17,7 +17,8 @@ function getSelectedMsgIndex()
 	var msgList = getAllMsgThread();
 	for (var i in msgList)
 	{
-		if (msgList[i].className.indexOf('_2tms') !== -1)
+		var msg = msgList[i];
+		if (msg && msg.classList && msg.classList.contains('_2tms'))
 		{
 			return i;
 		}
@@ -33,7 +34,7 @@ if (selected === -1)
 	throw "err";
 }
 
-console.log(selected);
+// console.log(selected);
 
 var msgTxtBox = document.querySelector('[data-testid="inbox_composer_text_input"]');
 
@@ -42,4 +43,17 @@ if (!msgTxtBox)
 	throw "err";
 }
 
+var sendBtnWrap = document.querySelector('[data-testid="inbox_coomposer_send"]');
 
+if (!sendBtnWrap)
+{
+	throw "err";
+}
+
+sendBtnWrap.classList.remove('hidden_elem');
+
+console.log(sendBtnWrap);
+
+var sendBtn = sendBtnWrap.querySelector('button');
+
+sendBtn.removeAttribute('disabled');
