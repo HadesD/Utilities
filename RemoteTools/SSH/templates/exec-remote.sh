@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #_SELF="${0##*/}"
-_SELF=$(basename $0)
+_SELF=$(basename "$0")
 REMOTE_SERVER_NAME=${_SELF/".sh"/""}
 SSH_KEY_FILE="../Keys/${REMOTE_SERVER_NAME}.pem"
 
