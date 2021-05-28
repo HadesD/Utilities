@@ -12,32 +12,34 @@ if [[ "$CONN_TYPE" == "" ]]; then
 Default[1]: ' CONN_TYPE
 fi
 
-DISPLAY=127.0.0.1:0
+if [ -z $DISPLAY ]; then
+  DISPLAY=127.0.0.1:0
+fi
 
 echo "[+] Connecting to ${REMOTE_SERVER_USERNAME}:${REMOTE_SERVER_PASSWORD}@${REMOTE_SERVER_HOST}:${REMOTE_SERVER_PORT}..."
 
 if [[ "$CONN_TYPE" == "2" ]]; then
   PPK_KEY_FILE="../Keys/${REMOTE_SERVER_NAME}.ppk"
   PASSWORD_FLAG="-password=\"$REMOTE_SERVER_PASSWORD\""
-  WINE_EXE=''
-  WINEPATH_EXE=''
+  WINE_EXE=start
+  WINEPATH_EXE=echo
+  WINE_EXE_WINSCP_KEYGEN=''
+  # WINE_EXE='' # Debug
   if [ -x "$(command -v wine)" ]; then
     WINE_EXE=wine
-	WINEPATH_EXE='winepath --windows'
-  else
-    WINE_EXE=start
-    # WINE_EXE=''
+    WINEPATH_EXE='winepath --windows'
+    WINE_EXE_WINSCP_KEYGEN=$WINE_EXE
   fi
 
   if [ ! -f "${PPK_KEY_FILE}" ]; then
     if [ -f "$SSH_KEY_FILE" ]; then
-      $WINE_EXE ../WinSCP/WinSCP.com /keygen "$($WINEPATH_EXE $SSH_KEY_FILE)" /output="$($WINEPATH_EXE ${PPK_KEY_FILE})"
+      $WINE_EXE ../WinSCP/WinSCP.com /keygen: "$(${WINEPATH_EXE} ${SSH_KEY_FILE})" -o "$(${WINEPATH_EXE} ${PPK_KEY_FILE})"
     fi
   fi
   if [ -f "${PPK_KEY_FILE}" ]; then
-    PASSWORD_FLAG="-privatekey="$($WINEPATH_EXE ${PPK_KEY_FILE})""
+    PASSWORD_FLAG="-privatekey="$(${WINEPATH_EXE} ${PPK_KEY_FILE})
   fi
-  $WINE_EXE ../WinSCP/WinSCP.exe $PASSWORD_FLAG sftp://${REMOTE_SERVER_USERNAME}:${REMOTE_SERVER_PASSWORD}@${REMOTE_SERVER_HOST}:${REMOTE_SERVER_PORT} -sessionname="${REMOTE_SERVER_NAME}"
+  $WINE_EXE ../WinSCP/WinSCP.exe $PASSWORD_FLAG sftp://${REMOTE_SERVER_USERNAME}:${REMOTE_SERVER_PASSWORD}@${REMOTE_SERVER_HOST}:${REMOTE_SERVER_PORT} /sessionname="${REMOTE_SERVER_NAME}"
 else
   SSH_APPEND_FLAGS="-XY -o ServerAliveInterval=30 ${REMOTE_SERVER_USERNAME}@${REMOTE_SERVER_HOST} -p ${REMOTE_SERVER_PORT}"
 
