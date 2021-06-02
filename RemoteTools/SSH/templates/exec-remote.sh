@@ -16,7 +16,7 @@ if [ -z $DISPLAY ]; then
   DISPLAY=127.0.0.1:0
 fi
 
-echo "[+] Connecting to ${REMOTE_SERVER_USERNAME}:${REMOTE_SERVER_PASSWORD}@${REMOTE_SERVER_HOST}:${REMOTE_SERVER_PORT}..."
+echo "[+] Connecting to [${REMOTE_SERVER_USERNAME} : ${REMOTE_SERVER_PASSWORD} @ ${REMOTE_SERVER_HOST} : ${REMOTE_SERVER_PORT}]..."
 
 if [[ "$CONN_TYPE" == "2" ]]; then
   PPK_KEY_FILE="../Keys/${REMOTE_SERVER_NAME}.ppk"
@@ -24,7 +24,7 @@ if [[ "$CONN_TYPE" == "2" ]]; then
   WINE_EXE=start
   WINEPATH_EXE=echo
   WINE_EXE_WINSCP_KEYGEN=''
-  # WINE_EXE='' # Debug
+  #WINE_EXE='' # Debug
   if [ -x "$(command -v wine)" ]; then
     WINE_EXE=wine
     WINEPATH_EXE='winepath --windows'
@@ -33,7 +33,7 @@ if [[ "$CONN_TYPE" == "2" ]]; then
 
   if [ ! -f "${PPK_KEY_FILE}" ]; then
     if [ -f "$SSH_KEY_FILE" ]; then
-      $WINE_EXE ../WinSCP/WinSCP.com /keygen: "$(${WINEPATH_EXE} ${SSH_KEY_FILE})" -o "$(${WINEPATH_EXE} ${PPK_KEY_FILE})"
+      $WINE_EXE_WINSCP_KEYGEN ../WinSCP/WinSCP.com /keygen: "$(${WINEPATH_EXE} ${SSH_KEY_FILE})" -o "$(${WINEPATH_EXE} ${PPK_KEY_FILE})"
     fi
   fi
   if [ -f "${PPK_KEY_FILE}" ]; then
