@@ -2,8 +2,8 @@
 set VPN_NAME=vpn-for-game
 set SERVER_ADDR=sg-l2tp.racevpn.com
 set SHARED_KEY=racevpn
-set VPN_USERNAME=racevpn.com-vpnvpn1
-set VPN_PASSWORD=vpnvpn1
+set VPN_USERNAME=racevpn.com-vpn2vpn
+set VPN_PASSWORD=vpn2vpn
 
 rasdial /DISCONNECT
 
