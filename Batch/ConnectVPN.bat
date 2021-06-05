@@ -1,7 +1,7 @@
 @echo OFF
 
 REM # IExpress command line install
-REM # (New-Object System.Net.WebClient).DownloadFile("https://example.com/archive.zip", "ConnectVPN.bat") && cmd /c ConnectVPN.bat
+REM # (New-Object System.Net.WebClient).DownloadFile("https://raw.githubusercontent.com/HadesD/Utilities/master/Batch/ConnectVPN.bat", "ConnectVPN.bat") && cmd /c ConnectVPN.bat
 
 set VPN_NAME=VPN-For-Gamer
 set SERVER_ADDR=sg-l2tp.racevpn.com
