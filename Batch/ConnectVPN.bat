@@ -4,7 +4,7 @@ net session >nul 2>&1
 if %errorLevel% == 0 (
     echo Success: Administrative permissions confirmed.
 ) else (
-    runas /noprofile /user:mymachine\administrator ConnectVPN.bat
+    powershell -command start-process -file ConnectVPN.bat -verb runas
     exit /b 0
 )
 
