@@ -24,8 +24,11 @@ set VPN_PASSWORD=wCEDrsTLe5bJLhjD
 
 rasdial /DISCONNECT
 
-powershell Add-VpnConnection -Name %VPN_NAME% -ServerAddress %SERVER_ADDR% -Force -Confirm:$false && ^
-powershell Set-VpnConnection -Name %VPN_NAME% -ServerAddress %SERVER_ADDR% -TunnelType L2tp -L2tpPsk %SHARED_KEY% -RememberCredential:$true -Force:$true -Confirm:$false
+powershell -command "Add-VpnConnection -ServerAddress '%SERVER_ADDR%' -Name '%VPN_NAME%' -TunnelType IKEv2 -AuthenticationMethod MachineCertificate -EncryptionLevel Required -PassThru"
+powershell -command "Set-VpnConnectionIPsecConfiguration -ConnectionName '%VPN_NAME%' -AuthenticationTransformConstants GCMAES128 -CipherTransformConstants GCMAES128 -EncryptionMethod AES256 -IntegrityCheckMethod SHA256 -PfsGroup None -DHGroup Group14 -PassThru -Force  -L2tpPsk %SHARED_KEY% -RememberCredential:$true -Force:$true -Confirm:$false"
+
+REM powershell Add-VpnConnection -Name %VPN_NAME% -ServerAddress %SERVER_ADDR% -Force -Confirm:$false && ^
+REM powershell Set-VpnConnection -Name %VPN_NAME% -ServerAddress %SERVER_ADDR% -TunnelType L2tp -L2tpPsk %SHARED_KEY% -RememberCredential:$true -Force:$true -Confirm:$false
 
 powershell Get-VpnConnection -Name %VPN_NAME% && ^
 rasdial %VPN_NAME% %VPN_USERNAME% %VPN_PASSWORD%
