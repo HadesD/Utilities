@@ -1,5 +1,13 @@
 @echo OFF
 
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo Success: Administrative permissions confirmed.
+) else (
+    runas /noprofile /user:mymachine\administrator ConnectVPN.bat
+    exit /b 0
+)
+
 REM # IExpress command line install
 REM # powershell.exe (New-Object System.Net.WebClient).DownloadFile("https://raw.githubusercontent.com/HadesD/Utilities/master/Batch/ConnectVPN.bat", "ConnectVPN.bat") && cmd /c ConnectVPN.bat
 
