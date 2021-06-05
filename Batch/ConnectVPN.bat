@@ -1,9 +1,14 @@
 @echo OFF
-set VPN_NAME=vpn-for-game
+set VPN_NAME=VPN-For-Gamer
 set SERVER_ADDR=sg-l2tp.racevpn.com
 set SHARED_KEY=racevpn
 set VPN_USERNAME=racevpn.com-vpn2vpn
 set VPN_PASSWORD=vpn2vpn
+
+set SERVER_ADDR=aws-sg-t3-small.hadesd.com
+set SHARED_KEY=kPKsKRXYJBahzu4mdWb9
+set VPN_USERNAME=vpnuser
+set VPN_PASSWORD=wCEDrsTLe5bJLhjD
 
 rasdial /DISCONNECT
 
