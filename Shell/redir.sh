@@ -1,3 +1,5 @@
+# bash redir.sh -l xxx -h xxx -p xxx
+
 while getopts l:h:p: flag
 do
     case "${flag}" in
