@@ -9,6 +9,14 @@ do
     esac
 done
 
+if [[ "$LPORT" == "" ]]; then
+    LPORT=$CPORT
+fi
+
+if [[ "$CPORT" == "" ]]; then
+    CPORT=$LPORT
+fi
+
 #read -p 'REDIRECT_TO_CADDR: ' CADDR
 #read -p 'REDIRECT_TO_CPORT: ' CPORT
 #read -p "LISTEN_PORT[${CPORT}]: " LPORT
