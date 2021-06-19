@@ -8,7 +8,7 @@ build:
 exec:
 	docker run --rm -it \
 		--workdir /srv \
-		-v ${v}:/srv/app
+		-v ${v}:/srv/app \
 		--name ubuntu-14_04_6-x86_64 \
 		${IMAGE_NAME} zsh
 
