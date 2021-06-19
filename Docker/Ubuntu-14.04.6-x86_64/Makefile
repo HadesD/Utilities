@@ -12,6 +12,6 @@ exec:
 		--workdir ${CONTAINER_WORKDIR} \
 		-v ${v}:${CONTAINER_WORKDIR} \
 		--name ${CONTAINER_HOST_NAME} \
-		--hostname ${CONTAINER_HOST_NAME}
+		--hostname ${CONTAINER_HOST_NAME} \
 		${IMAGE_NAME} zsh
 
