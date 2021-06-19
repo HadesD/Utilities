@@ -1,5 +1,5 @@
 build:
-	docker build -t 'darkhades/ubuntu:14.04.6-x86_64' -f Dockerfile
+	docker build -t 'darkhades/ubuntu:14.04.6-x86_64' -f Dockerfile .
 
 exec:
 	docker run -rm -it \
