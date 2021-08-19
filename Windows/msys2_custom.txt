@@ -10,7 +10,7 @@ Windows Registry Editor Version 5.00
 @="MSYS2 Here"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\u_msys2\command]
-@="C:\\msys64\\msys2.exe bash"
+@="C:\\msys64\\msys2.exe /usr/bin/zsh"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\u_msys2\Icon]
 @="C:\\msys64\\msys2.exe,0"
