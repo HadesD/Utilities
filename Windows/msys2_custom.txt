@@ -1,0 +1,12 @@
+======= u_msys2.reg
+
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\u_msys2]
+@="MSYS2 Here"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\u_msys2\command]
+@="C:\\msys64\\msys2.exe bash"
+
+======= C:/msys64/msys2.ini
+HOME=%USERPROFILE%
