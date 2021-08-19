@@ -10,3 +10,4 @@ Windows Registry Editor Version 5.00
 
 ======= C:/msys64/msys2.ini
 HOME=%USERPROFILE%
+SHELL=/usr/bin/zsh
