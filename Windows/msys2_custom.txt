@@ -1,3 +1,7 @@
+======= Install
+https://www.msys2.org/
+pacman -Suy zsh git vim
+
 ======= u_msys2.reg
 
 Windows Registry Editor Version 5.00
