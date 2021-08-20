@@ -27,8 +27,11 @@ Windows Registry Editor Version 5.00
 
 ## C:/msys64/msys2.ini
 ```
+MSYSTEM=MSYS
 HOME=%USERPROFILE%
 SHELL=/usr/bin/zsh
+MSYS=winsymlinks:nativestrict
+MSYS2_PATH_TYPE=inherit
 ```
 
 ## Using git of msys2 on vscode
