@@ -39,3 +39,7 @@ MSYS2_PATH_TYPE=inherit
 ## Using git of msys2 on vscode
 
 https://github.com/eamodio/vscode-gitlens/issues/965#issuecomment-734013893
+
+## SSH Error `$HOME`
+
+https://qiita.com/nana4gonta/items/622571c66bfe7f1c7150
