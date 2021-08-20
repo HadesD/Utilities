@@ -38,4 +38,4 @@ MSYS2_PATH_TYPE=inherit
 
 ## Using git of msys2 on vscode
 
-https://github.com/Microsoft/vscode/issues/4651
+https://github.com/eamodio/vscode-gitlens/issues/965#issuecomment-734013893
