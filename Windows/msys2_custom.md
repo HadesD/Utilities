@@ -30,3 +30,7 @@ Windows Registry Editor Version 5.00
 HOME=%USERPROFILE%
 SHELL=/usr/bin/zsh
 ```
+
+## Using git of msys2 on vscode
+
+https://github.com/Microsoft/vscode/issues/4651
