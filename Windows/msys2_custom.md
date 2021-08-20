@@ -34,6 +34,8 @@ MSYS=winsymlinks:nativestrict
 MSYS2_PATH_TYPE=inherit
 ```
 
+*Remember to `Run as Admin` when you want to do synbolic link*
+
 ## Using git of msys2 on vscode
 
 https://github.com/Microsoft/vscode/issues/4651
