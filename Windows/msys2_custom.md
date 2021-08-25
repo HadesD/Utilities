@@ -43,3 +43,25 @@ https://github.com/eamodio/vscode-gitlens/issues/965#issuecomment-734013893
 ## SSH Error `$HOME`
 
 https://qiita.com/nana4gonta/items/622571c66bfe7f1c7150
+
+## Fix Slow Problem
+
+```bash
+mkpasswd -l -c > /etc/passwd
+# Need fix path of current use
+mkgroup -l -c > /etc/group
+```
+
+```diff
+--- /etc/nsswitch.conf.org
++++ /etc/nsswitch.conf
+@@ -1,7 +1,7 @@
+ # Begin /etc/nsswitch.conf
+ 
+-passwd: files db
+-group: files db
++passwd: files #db
++group: files #db
+ 
+ db_enum: cache builtin
+```
