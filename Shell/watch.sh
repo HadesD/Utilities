@@ -9,11 +9,6 @@ timestamp() {
 }
 
 LAST_TS=$(timestamp)
-    # --excludei "*\.js" \
-    # --excludei "*\.css" \
-    # --excludei "*\.sh" \
-    # --excludei "*\.gz" \
-    # --excludei '*(.git|build|node_modules|public|scripts|dashboard|uploads)/*' \
 
 inotifywait -r \
     -m \
@@ -25,7 +20,7 @@ inotifywait -r \
     filters \
     models \
     plugins \
-    'test' \
+    test \
     | while read base event file
     do
         echo $base $event $file
