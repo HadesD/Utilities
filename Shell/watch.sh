@@ -2,7 +2,7 @@
 
 # apt install inotify-tools
 
-PROCESS_NAME=RinPhone
+PROCESS_NAME=XX
 TRIGGER_CMD='make start'
 
 $TRIGGER_CMD &
