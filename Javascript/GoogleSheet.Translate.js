@@ -1,7 +1,9 @@
 function translateSheet() {
   const sheets = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = sheets.getSheetByName('DetailDesign');
-  const range = sheet.getRange('A2:AG5');
+  //const range = sheet.getRange('A1:AG2000'); // With range
+  const range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()); // All
+  console.log(range.getLastRow(), range.getColumn())
   const rangeRow = range.getRow();
   const rangeColumn = range.getColumn();
   const values = range.getValues();
