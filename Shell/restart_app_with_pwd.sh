@@ -6,7 +6,7 @@ APP_GREP_NAME=$1
 APP_PWD=$2
 
 if [ "${APP_GREP_NAME}" == "" ] || [ "${APP_PWD}" == "" ]; then
-  echo 'You must enter param[0] = APP_GREP_NAME and param[1] = APP_PWD'
+  echo 'Sample: ./restart_app_with_pwd.sh XXXTool /vav/www/xxx.com'
   exit 1
 fi
 
