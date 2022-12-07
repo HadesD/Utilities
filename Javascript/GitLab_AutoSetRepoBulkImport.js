@@ -1,5 +1,5 @@
 const a = $0; // table > tbody
-const trList = $0.getElementsByTagName('tr');
+const trList = a.getElementsByTagName('tr');
 const trSize = trList.length;
 for (let i = 0; i < trSize; i++) {
     const curTr = trList[i];
