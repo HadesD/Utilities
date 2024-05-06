@@ -1,3 +1,4 @@
+#!/bin/bash
 # More info: https://serverfault.com/a/783175
 
 # Send side: Start compressing and pipe to netcat listen server
